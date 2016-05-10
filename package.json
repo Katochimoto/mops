@@ -49,6 +49,8 @@
     "lolex": "1.4.0",
     "mocha": "2.4.5",
     "phantomjs-prebuilt": "2.1.7",
+    "preprocess": "3.1.0",
+    "preprocess-loader": "0.2.0",
     "sinon": "1.17.3",
     "sinon-chai": "2.8.0",
     "webpack": "1.13.0"

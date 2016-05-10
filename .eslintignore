@@ -1,0 +1,12 @@
+.git/
+.idea/
+bower_components/
+coverage/
+dist/
+node_modules/
+samples/
+webpack.config.js
+karma.conf.js
+bower.json
+package.json
+**/.*

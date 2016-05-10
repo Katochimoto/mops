@@ -1,0 +1,30 @@
+{
+  "name": "mops",
+  "version": "1.0.0",
+  "main": [
+    "dist/mops.js",
+    "dist/mops.min.js",
+    "dist/mops.min.js.map"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "Makefile",
+    "src",
+    "package.json",
+    "karma.conf.js",
+    "webpack.config.js"
+  ],
+  "homepage": "",
+  "authors": [
+    "Rikishi <rikishi@protonmail.ch>"
+  ],
+  "description": "",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [],
+  "license": "MIT"
+}

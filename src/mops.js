@@ -1,13 +1,11 @@
-//isPlainObject
-//forOwn
-//rearg
-//isString
-//isFunction
-//wrap
-//partial
-//create
-
-
+import isPlainObject from 'lodash/isPlainObject';
+import forOwn from 'lodash/forOwn';
+import rearg from 'lodash/rearg';
+import isString from 'lodash/isString';
+import isFunction from 'lodash/isFunction';
+import wrap from 'lodash/wrap';
+import partial from 'lodash/partial';
+import create from 'lodash/create';
 
 const defaultWeight = 100;
 
@@ -41,6 +39,10 @@ mops.define = function (actionName, action, weight) {
     }
 
     return mops;
+};
+
+mops.inherit = function () {
+
 };
 
 export default mops;
