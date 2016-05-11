@@ -1,3 +1,4 @@
+/*
 import isPlainObject from 'lodash/isPlainObject';
 import forOwn from 'lodash/forOwn';
 import rearg from 'lodash/rearg';
@@ -6,80 +7,111 @@ import isFunction from 'lodash/isFunction';
 import wrap from 'lodash/wrap';
 import partial from 'lodash/partial';
 import create from 'lodash/create';
+const ACTIONS = Symbol('mops-actions');
+*/
 
-const defaultWeight = 100;
+const forOwn = require('lodash/forOwn');
+const rearg = require('lodash/rearg');
+const wrap = require('lodash/wrap');
+const partial = require('lodash/partial');
+const cloneDeep = require('lodash/cloneDeep');
 
-const actions = Symbol('mops-actions');
+const QUEUE = Symbol('mops-queue');
+const WRAP = {
+    append: {
+        value: function (action, weight = 100) {
+            this[ QUEUE ].push([ action, weight ]);
+            return this;
+        }
+    },
 
-const queue = Symbol('mops-wrap-queue');
+    then: {
+        value: function () {}
+    },
 
-const mops = function (data) {
-    return mops.wrap(new MopsOperation(data));
-};
+    catch: {
+        value: function () {}
+    },
 
-mops[ actions ] = {};
+    cond: {
+        value: function () {}
+    },
 
-mops.wrap = function(data) {
-    return (this instanceof MopsWrapper) ? this : new MopsWrapper(data);
-};
+    start: {
+        value: function () {
+            let queue = this[ QUEUE ];
+            this[ QUEUE ] = [];
+        }
+    },
 
-mops.define = function (actionName, action, weight) {
-    if (isPlainObject(actionName)) {
-        forOwn(actionName, rearg(define, 1, 0));
+    clone: {
+        value: function () {
+            throw new Error('The queue cannot be cloned');
+        }
+    },
 
-    } else if (isString(actionName) && isFunction(action)) {
+    queue: {
+        value: function () {
+            return this;
+        }
+    },
 
-        mops[ actions ][ actionName ] = [ wrap(action, wrapAction), weight ];
-
-        Object.defineProperty(mops, actionName, {
-            value: function () {
-                return this.wrap().append(...mops[ actions ][ actionName ]);
-            }
-        });
+    define: {
+        value: function () {
+            throw new Error('Cannot define a method in the queue');
+        }
     }
-
-    return mops;
 };
 
-mops.inherit = function () {
-
-};
-
-export default mops;
-
-
-
-function MopsWrapper() {
-    this[ queue ] = [];
+function MopsBase() {
+    return this.clone();
 }
 
-MopsWrapper.prototype = create(mops, {
-    'constructor': MopsWrapper,
+MopsBase.prototype.clone = function () {
+    const Mops = function () {};
+    Mops.prototype = Object.create(this);
+    Mops.prototype.constructor = Mops;
+    return new Mops();
+};
 
-    append(action, weight) {
-        this[ queue ].push([ action, weight ])
-        return this;
-    },
+MopsBase.prototype.queue = function (data) {
+    const MopsQueue = function (operationData) {
+        this[ QUEUE ] = [];
+        Object.defineProperty(this, 'operation', { value: new MopsOperation(operationData) });
+    };
 
-    then() {
-        return this;
-    },
+    MopsQueue.prototype = Object.create(this, WRAP);
+    MopsQueue.prototype.constructor = MopsQueue;
 
-    catch() {
-        return this;
-    },
+    return new MopsQueue(data);
+};
 
-    cond() {
-        return this;
-    },
+MopsBase.prototype.define = function (actionName, action, weight) {
+    const typeActionName = typeof actionName;
 
-    start() {
+    switch (typeActionName) {
+    case 'object':
+        forOwn(actionName, rearg(this.define.bind(this), 1, 0));
+        break;
 
+    case 'string':
+        if (typeof action === 'function') {
+            Object.defineProperty(this, actionName, {
+                value: function () {
+                    return this.queue().append(wrap(action, wrapAction), weight);
+                }
+            });
+        }
+        break;
     }
-});
 
-function MopsOperation() {
+    return this;
+};
 
+module.exports = new MopsBase();
+
+function MopsOperation(data) {
+    Object.defineProperty(this, 'data', { value: cloneDeep(data) });
 }
 
 function wrapAction(func, ...args) {
