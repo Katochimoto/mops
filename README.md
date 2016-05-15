@@ -1,4 +1,4 @@
-[https://github.com/Katochimoto/mops/raw/master/pic.jpg]
+![mops](https://github.com/Katochimoto/mops/raw/master/pic.jpg)
 
 The operation queue.
 
