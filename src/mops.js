@@ -1,20 +1,21 @@
-const invariant = require('invariant');
-const forOwn = require('lodash/forOwn');
-const rearg = require('lodash/rearg');
-const wrap = require('lodash/wrap');
-const partial = require('lodash/partial');
 const cloneDeep = require('lodash/cloneDeep');
+const forOwn = require('lodash/forOwn');
+const invariant = require('invariant');
 const isNumber = require('lodash/isNumber');
 const isObject = require('lodash/isObject');
-const sortBy = require('lodash/sortBy');
+const isFunction = require('lodash/isFunction');
+const isString = require('lodash/isString');
 const noop = require('lodash/noop');
+const rearg = require('lodash/rearg');
+const sortBy = require('lodash/sortBy');
+const wrap = require('lodash/wrap');
 const Promise = require('es6-promise').Promise;
 
 const QUEUE = Symbol('mops-queue');
 const QUEUE_WRAP = {
     then: {
-        value: function (params) {
-            return this.cond(true, ...params);
+        value: function () {
+            return this.cond(true, ...arguments);
         }
     },
 
@@ -93,17 +94,14 @@ MopsBase.prototype.queue = function () {
 };
 
 MopsBase.prototype.define = function (actionName, action, weight) {
-    const typeActionName = typeof actionName;
-    const typeAction = typeof action;
-
-    if (typeActionName === 'object') {
+    if (isObject(actionName)) {
         forOwn(actionName, rearg(this.define.bind(this), 1, 0));
 
-    } else if (typeActionName === 'string' && typeAction === 'function') {
+    } else if (isString(actionName) && isFunction(action)) {
         Object.defineProperty(this, actionName, {
             value: function () {
                 let queue = this.queue();
-                return append(queue, { action: action.bind(queue, ...arguments), weight });
+                return append(queue, { weight, action: action.bind(queue, ...arguments) });
             }
         });
     }
@@ -119,7 +117,7 @@ function MopsOperation(data) {
 }
 
 function wrapAction(func, ...args) {
-    let data = partial(func, ...args)();
+    let data = func(...args);
 
     if (isObject(data) && data.hasOwnProperty(QUEUE)) {
         return data.start();
@@ -136,10 +134,14 @@ function execute(queue, promise) {
     }
 
     let { action, condition, rejected } = task;
+
     action = wrap(action, wrapAction);
 
-    // if (condition) {
-    // }
+    if (condition) {
+        action = wrap(action, function (func) {
+            return Promise.resolve(isFunction(condition) ? condition() : condition).then(func);
+        });
+    }
 
     promise = do {
         if (rejected) {
@@ -156,11 +158,11 @@ function execute(queue, promise) {
 function append(queue, params) {
     let { action, weight } = params;
 
-    if (typeof action === 'string' && queue.hasOwnProperty(action)) {
+    if (isString(action) && queue.hasOwnProperty(action)) {
         action = queue[ action ];
     }
 
-    invariant(typeof action === 'function', 'Add only possible method or function');
+    invariant(isFunction(action), 'Add only possible method or function');
 
     if (!isNumber(weight)) {
         params.weight = 100;
