@@ -167,11 +167,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = new MopsBase();
 
+	/**
+	 * @param {*} data
+	 * @returns {MopsOperation}
+	 */
 	function MopsOperation(data) {
 	    Object.defineProperty(this, 'data', { value: cloneDeep(data) });
 	    return Object.freeze(this);
 	}
 
+	/**
+	 * @param {function} func
+	 * @param {...*} args
+	 * @returns {function}
+	 */
 	function wrapAction(func) {
 	    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
 	        args[_key - 1] = arguments[_key];
@@ -181,6 +190,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return result(data) || data;
 	}
 
+	/**
+	 * @param {array} queue
+	 * @param {Promise} promise
+	 * @returns {Promise}
+	 */
 	function execute(queue, promise) {
 	    var task = queue.shift();
 
@@ -210,12 +224,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return execute(queue, promise.then(result, result));
 	}
 
+	/**
+	 * @param {*} data
+	 * @returns {?Promise}
+	 */
 	function result(data) {
 	    if (isObject(data) && data.hasOwnProperty(QUEUE)) {
 	        return data.start();
 	    }
 	}
 
+	/**
+	 * @param {MopsQueue} queue
+	 * @param {Object} params
+	 * @returns {MopsQueue}
+	 */
 	function append(queue, params) {
 	    if (isString(params.action) && isFunction(queue[params.action])) {
 	        params = assign(params, queue[params.action][SUPER]);

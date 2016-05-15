@@ -119,6 +119,7 @@ module.exports = new MopsBase();
 
 /**
  * @param {*} data
+ * @returns {MopsOperation}
  */
 function MopsOperation(data) {
     Object.defineProperty(this, 'data', { value: cloneDeep(data) });
@@ -127,7 +128,7 @@ function MopsOperation(data) {
 
 /**
  * @param {function} func
- * @param   {[type]} ...args [description]
+ * @param {...*} args
  * @returns {function}
  */
 function wrapAction(func, ...args) {
@@ -175,6 +176,7 @@ function execute(queue, promise) {
 
 /**
  * @param {*} data
+ * @returns {?Promise}
  */
 function result(data) {
     if (isObject(data) && data.hasOwnProperty(QUEUE)) {
