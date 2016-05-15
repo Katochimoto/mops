@@ -1,4 +1,4 @@
-![mops][logo]
+https://github.com/Katochimoto/mops/raw/master/pic.jpg
 
 The operation queue.
 
@@ -62,7 +62,6 @@ customMops.define('action1', function() {});
 customMops.action1().start();
 ```
 
-[logo]: https://github.com/Katochimoto/mops/raw/master/pic.jpg "mops"
 [build]: https://travis-ci.org/Katochimoto/mops.svg?branch=master
 [build-link]: https://travis-ci.org/Katochimoto/mops
 [version]: https://badge.fury.io/js/mops.svg
