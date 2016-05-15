@@ -1,6 +1,5 @@
 const cloneDeep = require('lodash/cloneDeep');
 const forOwn = require('lodash/forOwn');
-const invariant = require('invariant');
 const isNumber = require('lodash/isNumber');
 const isObject = require('lodash/isObject');
 const isFunction = require('lodash/isFunction');
@@ -9,7 +8,9 @@ const noop = require('lodash/noop');
 const rearg = require('lodash/rearg');
 const sortBy = require('lodash/sortBy');
 const wrap = require('lodash/wrap');
+const invariant = require('invariant');
 const Promise = require('es6-promise').Promise;
+const Symbol = require('es6-symbol');
 
 const QUEUE = Symbol('mops-queue');
 const QUEUE_WRAP = {
