@@ -161,7 +161,7 @@ function append(queue, params) {
     let { action, weight } = params;
 
     if (isString(action) && isFunction(queue[ action ])) {
-        // TODO передать condition и другие параметры
+        // TODO передать condition, rejected и другие параметры
         return queue[ action ]();
     }
 
