@@ -4,7 +4,7 @@ const isNumber = require('lodash/isNumber');
 const isObject = require('lodash/isObject');
 const isFunction = require('lodash/isFunction');
 const isString = require('lodash/isString');
-const noop = require('lodash/noop');
+const isNil = require('lodash/isNil');
 const rearg = require('lodash/rearg');
 const sortBy = require('lodash/sortBy');
 const wrap = require('lodash/wrap');
@@ -16,7 +16,7 @@ const QUEUE = Symbol('mops-queue');
 const QUEUE_WRAP = {
     then: {
         value: function () {
-            return this.cond(true, ...arguments);
+            return this.cond(null, ...arguments);
         }
     },
 
@@ -119,12 +119,7 @@ function MopsOperation(data) {
 
 function wrapAction(func, ...args) {
     let data = func(...args);
-
-    if (isObject(data) && data.hasOwnProperty(QUEUE)) {
-        return data.start();
-    }
-
-    return data;
+    return result(data) || data;
 }
 
 function execute(queue, promise) {
@@ -138,7 +133,7 @@ function execute(queue, promise) {
 
     action = wrap(action, wrapAction);
 
-    if (condition) {
+    if (!isNil(condition)) {
         action = wrap(action, function (func) {
             return Promise.resolve(isFunction(condition) ? condition() : condition).then(func);
         });
@@ -153,14 +148,21 @@ function execute(queue, promise) {
         }
     };
 
-    return execute(queue, promise.then(noop, noop));
+    return execute(queue, promise.then(result, result));
+}
+
+function result(data) {
+    if (isObject(data) && data.hasOwnProperty(QUEUE)) {
+        return data.start();
+    }
 }
 
 function append(queue, params) {
     let { action, weight } = params;
 
-    if (isString(action) && queue.hasOwnProperty(action)) {
-        action = queue[ action ];
+    if (isString(action) && isFunction(queue[ action ])) {
+        // TODO передать condition и другие параметры
+        return queue[ action ]();
     }
 
     invariant(isFunction(action), 'Add only possible method or function');

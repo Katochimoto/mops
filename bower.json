@@ -21,10 +21,10 @@
   "authors": [
     "Rikishi <rikishi@protonmail.ch>"
   ],
-  "description": "",
+  "description": "The operation queue",
   "moduleType": [
     "globals"
   ],
-  "keywords": [],
+  "keywords": ["operation", "queue"],
   "license": "MIT"
 }
