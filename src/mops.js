@@ -117,16 +117,29 @@ MopsBase.prototype.define = function (actionName, action, weight) {
 
 module.exports = new MopsBase();
 
+/**
+ * @param {*} data
+ */
 function MopsOperation(data) {
     Object.defineProperty(this, 'data', { value: cloneDeep(data) });
     return Object.freeze(this);
 }
 
+/**
+ * @param {function} func
+ * @param   {[type]} ...args [description]
+ * @returns {function}
+ */
 function wrapAction(func, ...args) {
     let data = func(...args);
     return result(data) || data;
 }
 
+/**
+ * @param {array} queue
+ * @param {Promise} promise
+ * @returns {Promise}
+ */
 function execute(queue, promise) {
     let task = queue.shift();
 
@@ -160,12 +173,20 @@ function execute(queue, promise) {
     return execute(queue, promise.then(result, result));
 }
 
+/**
+ * @param {*} data
+ */
 function result(data) {
     if (isObject(data) && data.hasOwnProperty(QUEUE)) {
         return data.start();
     }
 }
 
+/**
+ * @param {MopsQueue} queue
+ * @param {Object} params
+ * @returns {MopsQueue}
+ */
 function append(queue, params) {
     if (isString(params.action) && isFunction(queue[ params.action ])) {
         params = assign(params, queue[ params.action ][ SUPER ]);
