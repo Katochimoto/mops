@@ -4,15 +4,18 @@ const isNumber = require('lodash/isNumber');
 const isObject = require('lodash/isObject');
 const isFunction = require('lodash/isFunction');
 const isString = require('lodash/isString');
+const isUndefined = require('lodash/isUndefined');
 const isNil = require('lodash/isNil');
 const rearg = require('lodash/rearg');
 const sortBy = require('lodash/sortBy');
 const wrap = require('lodash/wrap');
+const assign = require('lodash/assign');
 const invariant = require('invariant');
 const Promise = require('es6-promise').Promise;
 const Symbol = require('es6-symbol');
 
 const QUEUE = Symbol('mops-queue');
+const SUPER = Symbol('mops-action-super');
 const QUEUE_WRAP = {
     then: {
         value: function () {
@@ -102,9 +105,11 @@ MopsBase.prototype.define = function (actionName, action, weight) {
         Object.defineProperty(this, actionName, {
             value: function () {
                 let queue = this.queue();
-                return append(queue, { weight, action: action.bind(queue, ...arguments) });
+                return append(queue, { action: action.bind(queue, ...arguments), weight });
             }
         });
+
+        this[ actionName ][ SUPER ] = { action, weight };
     }
 
     return this;
@@ -135,7 +140,11 @@ function execute(queue, promise) {
 
     if (!isNil(condition)) {
         action = wrap(action, function (func) {
-            return Promise.resolve(isFunction(condition) ? condition() : condition).then(func);
+            return Promise.resolve(isFunction(condition) ? condition() : condition).then(function (data) {
+                if (isUndefined(data) || Boolean(data)) {
+                    return func();
+                }
+            });
         });
     }
 
@@ -158,16 +167,15 @@ function result(data) {
 }
 
 function append(queue, params) {
-    let { action, weight } = params;
-
-    if (isString(action) && isFunction(queue[ action ])) {
-        // TODO передать condition, rejected и другие параметры
-        return queue[ action ]();
+    if (isString(params.action) && isFunction(queue[ params.action ])) {
+        params = assign(params, queue[ params.action ][ SUPER ]);
     }
 
-    invariant(isFunction(action), 'Add only possible method or function');
+    invariant(isFunction(params.action), 'Add only possible method or function');
 
-    if (!isNumber(weight)) {
+    params.action = params.action.bind(queue);
+
+    if (!isNumber(params.weight)) {
         params.weight = 100;
     }
 
