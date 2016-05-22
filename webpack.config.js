@@ -15,7 +15,7 @@ if (isDev) {
 
 var params = {
     'debug': isDev,
-    'devtool': undefined, // isDev ? 'eval' : undefined,
+    'devtool': isDev ? 'eval' : undefined,
     'target': 'web',
     'entry': {
         'mops': './mops.js'
