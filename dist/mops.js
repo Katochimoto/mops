@@ -61,7 +61,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var isString = __webpack_require__(3);
 	var rearg = __webpack_require__(6);
 	var forOwn = __webpack_require__(62);
-	var mopsQueue = __webpack_require__(147);
+	var invariant = __webpack_require__(147);
+	var mopsQueue = __webpack_require__(148);
 	var mopsSymbol = __webpack_require__(173);
 
 	function MopsBase() {
@@ -82,16 +83,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	MopsBase.prototype.define = function (actionName, action, weight) {
 	    if (isObject(actionName)) {
 	        forOwn(actionName, rearg(this.define.bind(this), 1, 0));
-	    } else if (isString(actionName) && isFunction(action)) {
-	        Object.defineProperty(this, actionName, {
-	            value: function value() {
-	                var queue = this.queue();
-	                return mopsQueue.append(queue, { action: action.bind.apply(action, [queue].concat(Array.prototype.slice.call(arguments))), weight: weight });
-	            }
-	        });
-
-	        this[actionName][mopsSymbol.SUPER] = { action: action, weight: weight };
+	        return this;
 	    }
+
+	    invariant(isString(actionName), 'Declare the method name must be a string');
+	    invariant(isFunction(action), 'The value of a declared method must be a function');
+
+	    Object.defineProperty(this, actionName, {
+	        value: function value() {
+	            var queue = this.queue();
+	            return mopsQueue.append(queue, { action: action.bind.apply(action, [queue].concat(Array.prototype.slice.call(arguments))), weight: weight });
+	        }
+	    });
+
+	    this[actionName][mopsSymbol.SUPER] = { action: action, weight: weight };
 
 	    return this;
 	};
@@ -5357,18 +5362,75 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/**
+	 * Copyright 2013-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 */
+
 	'use strict';
 
-	var isNumber = __webpack_require__(148);
+	/**
+	 * Use invariant() to assert state which your program assumes to be true.
+	 *
+	 * Provide sprintf-style format (only %s is supported) and arguments
+	 * to provide information about what broke and what you were
+	 * expecting.
+	 *
+	 * The invariant message will be stripped in production, but the invariant
+	 * will remain to ensure logic does not differ in production.
+	 */
+
+	var invariant = function(condition, format, a, b, c, d, e, f) {
+	  if (false) {
+	    if (format === undefined) {
+	      throw new Error('invariant requires an error message argument');
+	    }
+	  }
+
+	  if (!condition) {
+	    var error;
+	    if (format === undefined) {
+	      error = new Error(
+	        'Minified exception occurred; use the non-minified dev environment ' +
+	        'for the full error message and additional helpful warnings.'
+	      );
+	    } else {
+	      var args = [a, b, c, d, e, f];
+	      var argIndex = 0;
+	      error = new Error(
+	        format.replace(/%s/g, function() { return args[argIndex++]; })
+	      );
+	      error.name = 'Invariant Violation';
+	    }
+
+	    error.framesToPop = 1; // we don't care about invariant's own frame
+	    throw error;
+	  }
+	};
+
+	module.exports = invariant;
+
+
+/***/ },
+/* 148 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var isNumber = __webpack_require__(149);
 	var isObject = __webpack_require__(1);
 	var isFunction = __webpack_require__(2);
 	var isString = __webpack_require__(3);
-	var isUndefined = __webpack_require__(149);
-	var isNil = __webpack_require__(150);
-	var sortBy = __webpack_require__(151);
-	var wrap = __webpack_require__(162);
-	var assign = __webpack_require__(164);
-	var invariant = __webpack_require__(168);
+	var isUndefined = __webpack_require__(150);
+	var isNil = __webpack_require__(151);
+	var sortBy = __webpack_require__(152);
+	var wrap = __webpack_require__(163);
+	var assign = __webpack_require__(165);
+	var invariant = __webpack_require__(147);
 	var Promise = __webpack_require__(169).Promise;
 	var mopsSymbol = __webpack_require__(173);
 	var MopsOperation = __webpack_require__(192);
@@ -5536,7 +5598,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 148 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObjectLike = __webpack_require__(5);
@@ -5590,7 +5652,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 149 */
+/* 150 */
 /***/ function(module, exports) {
 
 	/**
@@ -5618,7 +5680,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 150 */
+/* 151 */
 /***/ function(module, exports) {
 
 	/**
@@ -5649,14 +5711,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 151 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseFlatten = __webpack_require__(7),
-	    baseOrderBy = __webpack_require__(152),
+	    baseOrderBy = __webpack_require__(153),
 	    isArray = __webpack_require__(4),
-	    isFlattenableIteratee = __webpack_require__(160),
-	    isIterateeCall = __webpack_require__(161),
+	    isFlattenableIteratee = __webpack_require__(161),
+	    isIterateeCall = __webpack_require__(162),
 	    rest = __webpack_require__(61);
 
 	/**
@@ -5714,15 +5776,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 152 */
+/* 153 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayMap = __webpack_require__(129),
 	    baseIteratee = __webpack_require__(73),
-	    baseMap = __webpack_require__(153),
-	    baseSortBy = __webpack_require__(156),
-	    baseUnary = __webpack_require__(157),
-	    compareMultiple = __webpack_require__(158),
+	    baseMap = __webpack_require__(154),
+	    baseSortBy = __webpack_require__(157),
+	    baseUnary = __webpack_require__(158),
+	    compareMultiple = __webpack_require__(159),
 	    identity = __webpack_require__(18);
 
 	/**
@@ -5754,10 +5816,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 153 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseEach = __webpack_require__(154),
+	var baseEach = __webpack_require__(155),
 	    isArrayLike = __webpack_require__(12);
 
 	/**
@@ -5782,11 +5844,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 154 */
+/* 155 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseForOwn = __webpack_require__(63),
-	    createBaseEach = __webpack_require__(155);
+	    createBaseEach = __webpack_require__(156);
 
 	/**
 	 * The base implementation of `_.forEach` without support for iteratee shorthands.
@@ -5802,7 +5864,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 155 */
+/* 156 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArrayLike = __webpack_require__(12);
@@ -5840,7 +5902,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 156 */
+/* 157 */
 /***/ function(module, exports) {
 
 	/**
@@ -5867,7 +5929,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 157 */
+/* 158 */
 /***/ function(module, exports) {
 
 	/**
@@ -5887,10 +5949,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 158 */
+/* 159 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var compareAscending = __webpack_require__(159);
+	var compareAscending = __webpack_require__(160);
 
 	/**
 	 * Used by `_.orderBy` to compare multiple properties of a value to another
@@ -5937,7 +5999,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 159 */
+/* 160 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isSymbol = __webpack_require__(60);
@@ -5984,7 +6046,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 160 */
+/* 161 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(4),
@@ -6006,7 +6068,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 161 */
+/* 162 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var eq = __webpack_require__(81),
@@ -6042,11 +6104,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 162 */
+/* 163 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var identity = __webpack_require__(18),
-	    partial = __webpack_require__(163);
+	    partial = __webpack_require__(164);
 
 	/**
 	 * Creates a function that provides `value` to the wrapper function as its
@@ -6079,7 +6141,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 163 */
+/* 164 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var createWrapper = __webpack_require__(16),
@@ -6135,12 +6197,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 164 */
+/* 165 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assignValue = __webpack_require__(165),
-	    copyObject = __webpack_require__(166),
-	    createAssigner = __webpack_require__(167),
+	var assignValue = __webpack_require__(166),
+	    copyObject = __webpack_require__(167),
+	    createAssigner = __webpack_require__(168),
 	    isArrayLike = __webpack_require__(12),
 	    isPrototype = __webpack_require__(72),
 	    keys = __webpack_require__(66);
@@ -6205,7 +6267,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 165 */
+/* 166 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var eq = __webpack_require__(81);
@@ -6238,10 +6300,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 166 */
+/* 167 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assignValue = __webpack_require__(165);
+	var assignValue = __webpack_require__(166);
 
 	/**
 	 * Copies properties of `source` to `object`.
@@ -6275,10 +6337,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 167 */
+/* 168 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isIterateeCall = __webpack_require__(161),
+	var isIterateeCall = __webpack_require__(162),
 	    rest = __webpack_require__(61);
 
 	/**
@@ -6315,63 +6377,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = createAssigner;
-
-
-/***/ },
-/* 168 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2013-2015, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 */
-
-	'use strict';
-
-	/**
-	 * Use invariant() to assert state which your program assumes to be true.
-	 *
-	 * Provide sprintf-style format (only %s is supported) and arguments
-	 * to provide information about what broke and what you were
-	 * expecting.
-	 *
-	 * The invariant message will be stripped in production, but the invariant
-	 * will remain to ensure logic does not differ in production.
-	 */
-
-	var invariant = function(condition, format, a, b, c, d, e, f) {
-	  if (false) {
-	    if (format === undefined) {
-	      throw new Error('invariant requires an error message argument');
-	    }
-	  }
-
-	  if (!condition) {
-	    var error;
-	    if (format === undefined) {
-	      error = new Error(
-	        'Minified exception occurred; use the non-minified dev environment ' +
-	        'for the full error message and additional helpful warnings.'
-	      );
-	    } else {
-	      var args = [a, b, c, d, e, f];
-	      var argIndex = 0;
-	      error = new Error(
-	        format.replace(/%s/g, function() { return args[argIndex++]; })
-	      );
-	      error.name = 'Invariant Violation';
-	    }
-
-	    error.framesToPop = 1; // we don't care about invariant's own frame
-	    throw error;
-	  }
-	};
-
-	module.exports = invariant;
 
 
 /***/ },
@@ -7934,7 +7939,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Stack = __webpack_require__(76),
 	    arrayEach = __webpack_require__(195),
-	    assignValue = __webpack_require__(165),
+	    assignValue = __webpack_require__(166),
 	    baseAssign = __webpack_require__(196),
 	    cloneBuffer = __webpack_require__(197),
 	    copyArray = __webpack_require__(48),
@@ -8105,7 +8110,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 196 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObject = __webpack_require__(166),
+	var copyObject = __webpack_require__(167),
 	    keys = __webpack_require__(66);
 
 	/**
@@ -8152,7 +8157,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObject = __webpack_require__(166),
+	var copyObject = __webpack_require__(167),
 	    getSymbols = __webpack_require__(199);
 
 	/**
