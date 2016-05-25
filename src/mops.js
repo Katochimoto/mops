@@ -1,16 +1,27 @@
-const isObject = require('lodash/isObject');
 const isFunction = require('lodash/isFunction');
 const isString = require('lodash/isString');
-const rearg = require('lodash/rearg');
-const forOwn = require('lodash/forOwn');
+const isObject = require('lodash/isObject');
 const invariant = require('invariant');
 const mopsQueue = require('./queue');
 const mopsSymbol = require('./symbol');
 
+/**
+ * @typedef {Object} Mops
+ * @class
+ * @augments MopsBase
+ */
+
+/**
+ * @class
+ * @returns {Mops}
+ */
 function MopsBase() {
     return this.clone();
 }
 
+/**
+ * @returns {Mops}
+ */
 MopsBase.prototype.clone = function () {
     const Mops = function () {};
     Mops.prototype = Object.create(this);
@@ -18,28 +29,43 @@ MopsBase.prototype.clone = function () {
     return new Mops();
 };
 
+/**
+ * @returns {MopsQueue}
+ */
 MopsBase.prototype.queue = function () {
-    return mopsQueue.create();
+    return mopsQueue.create(this);
 };
 
+/**
+ * @param {string|Object} actionName
+ * @param {function} [action]
+ * @param {number} weight
+ * @returns {MopsBase}
+ * @throws Declare the method name must be a string
+ * @throws The value of a declared method must be a function
+ */
 MopsBase.prototype.define = function (actionName, action, weight) {
     if (isObject(actionName)) {
-        forOwn(actionName, rearg(this.define.bind(this), 1, 0));
+        for (let name in actionName) {
+            if (actionName.hasOwnProperty(name)) {
+                this.define(name, actionName[ name ]);
+            }
+        }
+
         return this;
     }
 
     invariant(isString(actionName), 'Declare the method name must be a string');
     invariant(isFunction(action), 'The value of a declared method must be a function');
 
-    Object.defineProperty(this, actionName, {
-        value: function () {
-            let queue = this.queue();
-            return mopsQueue.append(queue, { action: action.bind(queue, ...arguments), weight });
-        }
-    });
+    const method = function () {
+        let queue = this.queue();
+        return mopsQueue.append(queue, { action: action.bind(queue, ...arguments), weight });
+    };
 
-    this[ actionName ][ mopsSymbol.SUPER ] = { action, weight };
+    method[ mopsSymbol.SUPER ] = { action, weight };
 
+    Object.defineProperty(this, actionName, { value: method });
     return this;
 };
 
