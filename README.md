@@ -62,6 +62,18 @@ customMops.define('action1', function() {});
 customMops.action1().start();
 ```
 
+## Install
+
+```
+npm install mops
+```
+```
+bower install mops
+```
+
+[![NPM](https://nodei.co/npm/mops.png?downloads=true&stars=true)](https://nodei.co/npm/mops/)
+[![NPM](https://nodei.co/npm-dl/mops.png)](https://nodei.co/npm/mops/)
+
 [build]: https://travis-ci.org/Katochimoto/mops.svg?branch=master
 [build-link]: https://travis-ci.org/Katochimoto/mops
 [version]: https://badge.fury.io/js/mops.svg
