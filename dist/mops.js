@@ -118,7 +118,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var method = function method() {
 	        var queue = this.queue();
-	        return mopsQueue.append(queue, { action: action.bind.apply(action, [queue].concat(Array.prototype.slice.call(arguments))), weight: weight });
+	        return mopsQueue.append(queue, { action: action.bind.apply(action, [undefined].concat(Array.prototype.slice.call(arguments))), weight: weight });
 	    };
 
 	    method[mopsSymbol.SUPER] = { action: action, weight: weight };
@@ -422,7 +422,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    catch: {
 	        value: function value(action) {
-	            return append(this, { action: action, rejected: true });
+	            return this.cond(null, null, action);
 	        }
 	    },
 
@@ -444,16 +444,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @function start
 	         * @memberof MopsQueue
-	         * @param {*|MopsOperation} operation
+	         * @param {*|MopsOperation} data
 	         * @returns {Promise}
 	         */
-	        value: function value(operation) {
+	        value: function value(data) {
 	            var tasks = this[mopsSymbol.QUEUE].sort(sortByWeight);
 	            this[mopsSymbol.QUEUE] = [];
 
-	            this.operation = operation instanceof MopsOperation ? operation : new MopsOperation(operation);
+	            var operation = data instanceof MopsOperation ? data : new MopsOperation(data);
 
-	            return execute(tasks, Promise.resolve());
+	            return execute(operation, tasks, Promise.resolve());
 	        }
 	    },
 
@@ -530,8 +530,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    invariant(isFunction(params.action), 'Add only possible method or function');
 
-	    params.action = params.action.bind(queue);
-
 	    if (isNumber(params.weight)) {
 	        params.weight = 100;
 	    }
@@ -588,12 +586,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
+	 * @param {MopsOperation} operation
 	 * @param {array} tasks
 	 * @param {Promise} promise
 	 * @returns {Promise}
 	 * @private
 	 */
-	function execute(tasks, promise) {
+	function execute(operation, tasks, promise) {
 	    var task = tasks.shift();
 
 	    if (!task) {
@@ -606,11 +605,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var wrapper = isNil(condition) ? wrapAction : wrap(condition, wrapCondition);
 
-	    action = wrap(action, wrapper);
+	    action = wrap(action.bind(operation), wrapper);
 
 	    promise = rejected ? promise.catch(action) : promise.then(action);
 
-	    return execute(tasks, promise.then(result, result));
+	    return execute(operation, tasks, promise.then(function (data) {
+	        return result(data) || Promise.resolve();
+	    }, function (data) {
+	        return result(data) || Promise.reject();
+	    }));
 	}
 
 	/**

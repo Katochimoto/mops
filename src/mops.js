@@ -60,7 +60,7 @@ MopsBase.prototype.define = function (actionName, action, weight) {
 
     const method = function () {
         let queue = this.queue();
-        return mopsQueue.append(queue, { action: action.bind(queue, ...arguments), weight });
+        return mopsQueue.append(queue, { action: action.bind(undefined, ...arguments), weight });
     };
 
     method[ mopsSymbol.SUPER ] = { action, weight };

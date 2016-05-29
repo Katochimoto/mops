@@ -27,7 +27,7 @@ const QUEUE_MIXIN = {
 
     catch: {
         value: function (action) {
-            return append(this, { action, rejected: true });
+            return this.cond(null, null, action);
         }
     },
 
@@ -49,23 +49,23 @@ const QUEUE_MIXIN = {
         /**
          * @function start
          * @memberof MopsQueue
-         * @param {*|MopsOperation} operation
+         * @param {*|MopsOperation} data
          * @returns {Promise}
          */
-        value: function (operation) {
+        value: function (data) {
             let tasks = this[ mopsSymbol.QUEUE ].sort(sortByWeight);
             this[ mopsSymbol.QUEUE ] = [];
 
-            this.operation = do {
-                if (operation instanceof MopsOperation) {
-                    operation;
+            const operation = do {
+                if (data instanceof MopsOperation) {
+                    data;
 
                 } else {
-                    new MopsOperation(operation);
+                    new MopsOperation(data);
                 }
             };
 
-            return execute(tasks, Promise.resolve());
+            return execute(operation, tasks, Promise.resolve());
         }
     },
 
@@ -142,8 +142,6 @@ function append(queue, params) {
 
     invariant(isFunction(params.action), 'Add only possible method or function');
 
-    params.action = params.action.bind(queue);
-
     if (isNumber(params.weight)) {
         params.weight = 100;
     }
@@ -192,12 +190,13 @@ function result(data) {
 }
 
 /**
+ * @param {MopsOperation} operation
  * @param {array} tasks
  * @param {Promise} promise
  * @returns {Promise}
  * @private
  */
-function execute(tasks, promise) {
+function execute(operation, tasks, promise) {
     let task = tasks.shift();
 
     if (!task) {
@@ -214,7 +213,7 @@ function execute(tasks, promise) {
         }
     };
 
-    action = wrap(action, wrapper);
+    action = wrap(action.bind(operation), wrapper);
 
     promise = do {
         if (rejected) {
@@ -225,7 +224,10 @@ function execute(tasks, promise) {
         }
     };
 
-    return execute(tasks, promise.then(result, result));
+    return execute(operation, tasks, promise.then(
+        (data) => result(data) || Promise.resolve(),
+        (data) => result(data) || Promise.reject()
+    ));
 }
 
 /**
