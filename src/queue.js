@@ -142,7 +142,7 @@ function append(queue, params) {
 
     invariant(isFunction(params.action), 'Add only possible method or function');
 
-    if (isNumber(params.weight)) {
+    if (!isNumber(params.weight)) {
         params.weight = 100;
     }
 
@@ -225,8 +225,8 @@ function execute(operation, tasks, promise) {
     };
 
     return execute(operation, tasks, promise.then(
-        (data) => result(data) || Promise.resolve(),
-        (data) => result(data) || Promise.reject()
+        data => result(data) || Promise.resolve(),
+        data => result(data) || Promise.reject()
     ));
 }
 

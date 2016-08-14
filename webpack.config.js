@@ -65,6 +65,7 @@ if (!isDev) {
         },
         'plugins': [
             new webpack.DefinePlugin({
+                'NODE_ENV': JSON.stringify(nodeEnv),
                 'process.env.NODE_ENV': JSON.stringify(nodeEnv),
                 'process.env': {
                     'NODE_ENV': JSON.stringify(nodeEnv)

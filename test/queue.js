@@ -236,9 +236,12 @@ describe('queue', function () {
             let action = this.sinon.spy();
             let queue = this.mops.queue();
 
-            return queue.then(action).start().then(() => {
-                assert(action.calledOnce);
-            });
+            return queue
+                .then(action)
+                .start()
+                .then(() => {
+                    assert(action.calledOnce);
+                });
         });
 
         it('должен вызвать цепочку методов', function () {
@@ -246,11 +249,15 @@ describe('queue', function () {
             let action2 = this.sinon.spy();
             let queue = this.mops.queue();
 
-            return queue.then(action1).then(action2).start().then(() => {
-                assert(action1.calledOnce);
-                assert(action2.calledOnce);
-                assert(action2.calledAfter(action1));
-            });
+            return queue
+                .then(action1)
+                .then(action2)
+                .start()
+                .then(() => {
+                    assert(action1.calledOnce);
+                    assert(action2.calledOnce);
+                    assert(action2.calledAfter(action1));
+                });
         });
 
         it('методы могут возвращать промис', function () {
@@ -258,25 +265,37 @@ describe('queue', function () {
             let action2 = this.sinon.spy(() => Promise.resolve());
             let queue = this.mops.queue();
 
-            return queue.then(action1).then(action2).start().then(() => {
-                assert(action1.calledOnce);
-                assert(action2.calledOnce);
-                assert(action2.calledAfter(action1));
-            });
+            return queue
+                .then(action1)
+                .then(action2)
+                .start()
+                .then(() => {
+                    assert(action1.calledOnce);
+                    assert(action2.calledOnce);
+                    assert(action2.calledAfter(action1));
+                });
         });
 
         it('если предыдущий метод вернул reject, то вызывается обработчик onRejected', function () {
             let action1 = this.sinon.spy(() => Promise.reject());
             let action2 = this.sinon.spy(() => Promise.resolve());
             let action3 = this.sinon.spy(() => Promise.resolve());
+            let action4 = this.sinon.spy(() => Promise.resolve());
             let queue = this.mops.queue();
 
-            return queue.then(action1).then(action2, action3).start().then(() => {
-                assert(action1.calledOnce);
-                assert.strictEqual(action2.callCount, 0);
-                assert(action3.calledOnce);
-                assert(action3.calledAfter(action1));
-            });
+            return queue
+                .then(action1)
+                .then(action2, action3)
+                .then(action4)
+                .start()
+                .then(() => {
+                    assert(action1.calledOnce);
+                    assert.strictEqual(action2.callCount, 0);
+                    assert(action3.calledOnce);
+                    assert(action3.calledAfter(action1));
+                    assert(action4.calledOnce);
+                    assert(action4.calledAfter(action3));
+                });
         });
     });
 });
