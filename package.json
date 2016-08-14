@@ -24,7 +24,7 @@
   "dependencies": {},
   "devDependencies": {
     "babel": "6.5.2",
-    "babel-cli": "^6.11.4",
+    "babel-cli": "6.11.4",
     "babel-eslint": "6.1.2",
     "babel-loader": "6.2.4",
     "babel-preset-es2015": "6.13.2",
@@ -37,7 +37,8 @@
     "eslint-config-yandex": "1.0.6",
     "eslint-loader": "1.5.0",
     "invariant": "2.2.1",
-    "istanbul": "^1.1.0-alpha.1",
+    "isparta": "4.0.0",
+    "istanbul": "1.1.0-alpha.1",
     "istanbul-instrumenter-loader": "0.2.0",
     "lodash": "4.15.0",
     "lolex": "1.5.1",
@@ -56,7 +57,7 @@
     "test": "./node_modules/.bin/eslint . --color; ./node_modules/.bin/mocha --compilers js:babel-register",
     "prod": "NODE_ENV=production ./node_modules/.bin/webpack --progress",
     "dev": "NODE_ENV=development ./node_modules/.bin/webpack --progress --watch",
-    "codeclimate": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --compilers js:babel-register; CODECLIMATE_REPO_TOKEN=dafd0fb850e792364e7595a939ef2a22933ce4d5ad1c7a972eb0fe7dc2c4e0c7 codeclimate-test-reporter < coverage/lcov.info"
+    "codeclimate": "./node_modules/.bin/babel-node ./node_modules/.bin/isparta cover ./node_modules/mocha/bin/_mocha; CODECLIMATE_REPO_TOKEN=dafd0fb850e792364e7595a939ef2a22933ce4d5ad1c7a972eb0fe7dc2c4e0c7 codeclimate-test-reporter < coverage/lcov.info"
   },
   "main": "dist/mops.js",
   "directories": {
