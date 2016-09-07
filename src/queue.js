@@ -4,6 +4,7 @@ const isObject = require('lodash/isObject');
 const isNil = require('lodash/isNil');
 const isNumber = require('lodash/isNumber');
 const isUndefined = require('lodash/isUndefined');
+const isError = require('lodash/isError');
 const wrap = require('lodash/wrap');
 const assign = require('lodash/assign');
 const invariant = require('invariant');
@@ -116,7 +117,6 @@ const QUEUE_MIXIN = {
 function create(mops) {
     const MopsQueue = function () {
         Object.defineProperty(this, mopsSymbol.QUEUE, { value: [], writable: true });
-        Object.defineProperty(this, 'operation', { value: null, writable: true });
     };
 
     MopsQueue.prototype = Object.create(mops, QUEUE_MIXIN);
@@ -186,6 +186,9 @@ function wrapCondition(condition, action, ...args) {
 function result(data) {
     if (isObject(data) && data.hasOwnProperty(mopsSymbol.QUEUE)) {
         return data.start();
+
+    } else if (isError(data)) {
+        return Promise.reject(data);
     }
 }
 

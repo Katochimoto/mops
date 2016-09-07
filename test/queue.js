@@ -20,7 +20,6 @@ describe('queue', function () {
         it('должен создать объект очередь MopsQueue', function () {
             let queue = this.mops.queue();
             assert.isArray(queue[ symbol.QUEUE ]);
-            assert.propertyVal(queue, 'operation', null);
         });
 
         it('объект очереди MopsQueue должен быть наследником mops', function () {
@@ -228,6 +227,22 @@ describe('queue', function () {
 
             let task = queue[ symbol.QUEUE ][0];
             assert.equal(task.action, action);
+        });
+
+        it('должен пробросить ошибку в следующий обработчик', function () {
+            let queue = this.mops.queue();
+            let messageError = 'test error 1';
+
+            return queue
+                .then(function () {
+                    throw new Error(messageError);
+                })
+                .catch(error => error)
+                .start()
+                .catch(function (error) {
+                    assert.instanceOf(error, Error, 'error is an instance of Error');
+                    assert.equal(error.message, messageError);
+                });
         });
     });
 
