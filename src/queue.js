@@ -7,6 +7,7 @@ const isUndefined = require('lodash/isUndefined');
 const isError = require('lodash/isError');
 const wrap = require('lodash/wrap');
 const assign = require('lodash/assign');
+const toArray = require('lodash/toArray');
 const invariant = require('invariant');
 const Promise = require('es6-promise').Promise;
 const mopsSymbol = require('./symbol');
@@ -206,7 +207,7 @@ function execute(operation, tasks, promise) {
         return promise;
     }
 
-    let { action, condition, rejected } = task;
+    let { action, condition, rejected, args } = task;
     let wrapper = do {
         if (isNil(condition)) {
             wrapAction;
@@ -216,7 +217,7 @@ function execute(operation, tasks, promise) {
         }
     };
 
-    action = wrap(action.bind(operation), wrapper);
+    action = wrap(action.bind(operation, ...toArray(args)), wrapper);
 
     promise = do {
         if (rejected) {

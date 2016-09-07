@@ -3,6 +3,7 @@ const sinon = require('sinon');
 const Promise = require('es6-promise').Promise;
 const mops = require('../src/mops');
 const symbol = require('../src/symbol');
+const MopsOperation = require('../src/operation');
 
 describe('queue', function () {
     beforeEach(function () {
@@ -311,6 +312,33 @@ describe('queue', function () {
                     assert(action4.calledOnce);
                     assert(action4.calledAfter(action3));
                 });
+        });
+    });
+
+    describe('вызов метода', function () {
+        it('должен сохранить аргументы вызова', function () {
+            this.mops.define('qaction1', function (a1, a2) {
+                assert.equal(a1, 'test1');
+                assert.equal(a2, 'test2');
+            });
+
+            let queue = this.mops.queue();
+
+            return queue
+                .qaction1('test1', 'test2')
+                .start();
+        });
+
+        it('контекст вызова должен быть MopsOperation', function () {
+            this.mops.define('qaction2', function () {
+                assert.instanceOf(this, MopsOperation, 'this is an instance of MopsOperation');
+            });
+
+            let queue = this.mops.queue();
+
+            return queue
+                .qaction2()
+                .start();
         });
     });
 });

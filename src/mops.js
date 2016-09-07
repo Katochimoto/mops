@@ -1,6 +1,7 @@
 const isFunction = require('lodash/isFunction');
 const isString = require('lodash/isString');
 const isObject = require('lodash/isObject');
+const toArray = require('lodash/toArray');
 const invariant = require('invariant');
 const mopsQueue = require('./queue');
 const mopsSymbol = require('./symbol');
@@ -60,7 +61,7 @@ MopsBase.prototype.define = function (actionName, action, weight) {
 
     const method = function () {
         let queue = this.queue();
-        return mopsQueue.append(queue, { action: action.bind(undefined, ...arguments), weight });
+        return mopsQueue.append(queue, { action, weight, args: toArray(arguments) });
     };
 
     method[ mopsSymbol.SUPER ] = { action, weight };
