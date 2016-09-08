@@ -63,6 +63,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var invariant = __webpack_require__(47);
 	var mopsQueue = __webpack_require__(48);
 	var mopsSymbol = __webpack_require__(113);
+	var MopsError = __webpack_require__(188);
 
 	/**
 	 * @typedef {Object} Mops
@@ -77,6 +78,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	function MopsBase() {
 	    return this.clone();
 	}
+
+	/**
+	 * @param {string} message
+	 * @returns {MopsError}
+	 */
+	MopsBase.prototype.error = function (message) {
+	    return new MopsError(message);
+	};
 
 	/**
 	 * @returns {Mops}
@@ -7450,6 +7459,105 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = stubFalse;
+
+
+/***/ },
+/* 188 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toString = __webpack_require__(189);
+
+	module.exports = MopsError;
+
+	/**
+	 * @class
+	 * @param {string} message
+	 */
+	function MopsError(message) {
+	    this.message = toString(message);
+	}
+
+	MopsError.prototype = Object.create(Error.prototype, {
+	    'constructor': {
+	        'value': MopsError
+	    },
+
+	    'name': {
+	        'value': 'MopsError'
+	    }
+	});
+
+/***/ },
+/* 189 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseToString = __webpack_require__(190);
+
+	/**
+	 * Converts `value` to a string. An empty string is returned for `null`
+	 * and `undefined` values. The sign of `-0` is preserved.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to process.
+	 * @returns {string} Returns the string.
+	 * @example
+	 *
+	 * _.toString(null);
+	 * // => ''
+	 *
+	 * _.toString(-0);
+	 * // => '-0'
+	 *
+	 * _.toString([1, 2, 3]);
+	 * // => '1,2,3'
+	 */
+	function toString(value) {
+	  return value == null ? '' : baseToString(value);
+	}
+
+	module.exports = toString;
+
+
+/***/ },
+/* 190 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Symbol = __webpack_require__(7),
+	    isSymbol = __webpack_require__(101);
+
+	/** Used as references for various `Number` constants. */
+	var INFINITY = 1 / 0;
+
+	/** Used to convert symbols to primitives and strings. */
+	var symbolProto = Symbol ? Symbol.prototype : undefined,
+	    symbolToString = symbolProto ? symbolProto.toString : undefined;
+
+	/**
+	 * The base implementation of `_.toString` which doesn't convert nullish
+	 * values to empty strings.
+	 *
+	 * @private
+	 * @param {*} value The value to process.
+	 * @returns {string} Returns the string.
+	 */
+	function baseToString(value) {
+	  // Exit early for strings to avoid a performance hit in some environments.
+	  if (typeof value == 'string') {
+	    return value;
+	  }
+	  if (isSymbol(value)) {
+	    return symbolToString ? symbolToString.call(value) : '';
+	  }
+	  var result = (value + '');
+	  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+	}
+
+	module.exports = baseToString;
 
 
 /***/ }

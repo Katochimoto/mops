@@ -431,6 +431,42 @@ describe('queue', function () {
                     assert(action4.calledAfter(action3));
                 });
         });
+
+        it('методы могут возвращать другие цепочки', function () {
+            let action1 = this.sinon.spy();
+            let action2 = this.sinon.spy();
+            let queue = this.mops.queue();
+
+            this.mops.define('action1', action1);
+            this.mops.define('action2', action2);
+
+            return queue
+                .then(() => this.mops.action1())
+                .action2()
+                .start()
+                .then(() => {
+                    assert(action1.calledOnce);
+                    assert(action2.calledOnce);
+                    assert(action2.calledAfter(action1));
+                });
+        });
+
+        it('контекст вызова сохраняется при внутреннем вызове start', function () {
+            let that = this;
+            let queue = this.mops.queue();
+
+            return queue
+                .then(function () {
+                    let context = this;
+                    return that.mops
+                        .queue()
+                        .then(function () {
+                            assert.strictEqual(this, context);
+                        })
+                        .start(context);
+                })
+                .start();
+        });
     });
 
     describe('вызов метода', function () {
@@ -457,6 +493,27 @@ describe('queue', function () {
             return queue
                 .qaction2()
                 .start();
+        });
+
+        it('методы вызываются в порядке объявления веса от меньшего к большему', function () {
+            let action1 = this.sinon.spy();
+            let action2 = this.sinon.spy();
+            let action3 = this.sinon.spy();
+            let queue = this.mops.queue();
+
+            this.mops.define('action1', action1, 100);
+            this.mops.define('action2', action2, 50);
+            this.mops.define('action3', action3, 75);
+
+            return queue
+                .action1()
+                .action2()
+                .action3()
+                .start()
+                .then(() => {
+                    assert(action3.calledAfter(action2));
+                    assert(action1.calledAfter(action3));
+                });
         });
     });
 });
