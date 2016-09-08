@@ -1596,18 +1596,36 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    catch: {
 	        value: function value(action) {
-	            return this.cond(null, null, action);
+	            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	                args[_key - 1] = arguments[_key];
+	            }
+
+	            return this.cond.apply(this, [null, null, action].concat(args));
+	        }
+	    },
+
+	    always: {
+	        value: function value(action) {
+	            for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+	                args[_key2 - 1] = arguments[_key2];
+	            }
+
+	            return this.cond.apply(this, [null, action, action].concat(args));
 	        }
 	    },
 
 	    cond: {
 	        value: function value(condition, onFulfilled, onRejected) {
+	            for (var _len3 = arguments.length, args = Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
+	                args[_key3 - 3] = arguments[_key3];
+	            }
+
 	            if (onFulfilled) {
-	                append(this, { action: onFulfilled, condition: condition });
+	                append(this, { action: onFulfilled, condition: condition, args: args });
 	            }
 
 	            if (onRejected) {
-	                append(this, { action: onRejected, rejected: true, condition: condition });
+	                append(this, { action: onRejected, rejected: true, condition: condition, args: args });
 	            }
 
 	            return this;
@@ -1718,8 +1736,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @private
 	 */
 	function wrapAction(action) {
-	    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-	        args[_key - 1] = arguments[_key];
+	    for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+	        args[_key4 - 1] = arguments[_key4];
 	    }
 
 	    var data = action.apply(undefined, args);
@@ -1734,8 +1752,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @private
 	 */
 	function wrapCondition(condition, action) {
-	    for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-	        args[_key2 - 2] = arguments[_key2];
+	    for (var _len5 = arguments.length, args = Array(_len5 > 2 ? _len5 - 2 : 0), _key5 = 2; _key5 < _len5; _key5++) {
+	        args[_key5 - 2] = arguments[_key5];
 	    }
 
 	    condition = isFunction(condition) ? condition() : condition;

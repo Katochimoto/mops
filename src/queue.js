@@ -28,19 +28,25 @@ const QUEUE_MIXIN = {
     },
 
     catch: {
-        value: function (action) {
-            return this.cond(null, null, action);
+        value: function (action, ...args) {
+            return this.cond(null, null, action, ...args);
+        }
+    },
+
+    always: {
+        value: function (action, ...args) {
+            return this.cond(null, action, action, ...args);
         }
     },
 
     cond: {
-        value: function (condition, onFulfilled, onRejected) {
+        value: function (condition, onFulfilled, onRejected, ...args) {
             if (onFulfilled) {
-                append(this, { action: onFulfilled, condition });
+                append(this, { action: onFulfilled, condition, args });
             }
 
             if (onRejected) {
-                append(this, { action: onRejected, rejected: true, condition });
+                append(this, { action: onRejected, rejected: true, condition, args });
             }
 
             return this;

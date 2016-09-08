@@ -138,6 +138,29 @@ describe('queue', function () {
             let task = queue[ symbol.QUEUE ][0];
             assert.equal(task.action, action);
         });
+
+        it('должен передать аргументы в функции очереди 1', function () {
+            let queue = this.mops.queue();
+
+            return queue
+                .cond(true, function (a1, a2) {
+                    assert.equal(a1, 'test1');
+                    assert.equal(a2, 'test2');
+                }, null, 'test1', 'test2')
+                .start();
+        });
+
+        it('должен передать аргументы в функции очереди 2', function () {
+            let queue = this.mops.queue();
+
+            return queue
+                .then(() => Promise.reject())
+                .cond(true, null, function (a1, a2) {
+                    assert.equal(a1, 'test1');
+                    assert.equal(a2, 'test2');
+                }, 'test1', 'test2')
+                .start();
+        });
     });
 
     describe('#then()', function () {
@@ -204,6 +227,29 @@ describe('queue', function () {
             let task = queue[ symbol.QUEUE ][0];
             assert.equal(task.action, action);
         });
+
+        it('должен передать аргументы в функции очереди 1', function () {
+            let queue = this.mops.queue();
+
+            return queue
+                .then(function (a1, a2) {
+                    assert.equal(a1, 'test1');
+                    assert.equal(a2, 'test2');
+                }, null, 'test1', 'test2')
+                .start();
+        });
+
+        it('должен передать аргументы в функции очереди 2', function () {
+            let queue = this.mops.queue();
+
+            return queue
+                .then(() => Promise.reject())
+                .then(null, function (a1, a2) {
+                    assert.equal(a1, 'test1');
+                    assert.equal(a2, 'test2');
+                }, 'test1', 'test2')
+                .start();
+        });
     });
 
     describe('#catch()', function () {
@@ -244,6 +290,78 @@ describe('queue', function () {
                     assert.instanceOf(error, Error, 'error is an instance of Error');
                     assert.equal(error.message, messageError);
                 });
+        });
+
+        it('должен передать аргументы в функции очереди', function () {
+            let queue = this.mops.queue();
+
+            return queue
+                .then(() => Promise.reject())
+                .catch(function (a1, a2) {
+                    assert.equal(a1, 'test1');
+                    assert.equal(a2, 'test2');
+                }, 'test1', 'test2')
+                .start();
+        });
+    });
+
+    describe('#always()', function () {
+        it('должен добавить методы onFulfilled и onRejected', function () {
+            let onAlways = function () {};
+            let queue = this.mops.queue();
+
+            queue.always(onAlways);
+
+            let task0 = queue[ symbol.QUEUE ][0];
+            assert.equal(task0.action, onAlways);
+            assert.equal(task0.condition, null);
+            assert.isNotOk(task0.rejected);
+
+            let task1 = queue[ symbol.QUEUE ][1];
+            assert.equal(task1.action, onAlways);
+            assert.equal(task1.condition, null);
+            assert.isOk(task1.rejected);
+        });
+
+        it('должен добавить метод onFulfilled и onRejected строкой, если он определен', function () {
+            let action = function () {};
+            let queue = this.mops.queue();
+
+            this.mops.define('action', action);
+            queue.always('action');
+
+            let task0 = queue[ symbol.QUEUE ][0];
+            assert.equal(task0.action, action);
+            assert.equal(task0.condition, null);
+            assert.isNotOk(task0.rejected);
+
+            let task1 = queue[ symbol.QUEUE ][1];
+            assert.equal(task1.action, action);
+            assert.equal(task1.condition, null);
+            assert.isOk(task1.rejected);
+        });
+
+        it('должен передать аргументы в функции очереди 1', function () {
+            let queue = this.mops.queue();
+
+            return queue
+                .always(function (a1, a2) {
+                    assert.equal(a1, 'test1');
+                    assert.equal(a2, 'test2');
+                }, 'test1', 'test2')
+                .start();
+        });
+
+        it('должен передать аргументы в функции очереди 2', function () {
+            let queue = this.mops.queue();
+
+            return queue
+                .then(() => Promise.reject())
+                .always(function (a1, a2) {
+                    assert.equal(a1, 'test1');
+                    assert.equal(a2, 'test2');
+                }, 'test1', 'test2')
+                .start();
         });
     });
 
