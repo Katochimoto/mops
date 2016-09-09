@@ -5,16 +5,16 @@ The operation queue.
 [![Build Status][build]][build-link] [![NPM version][version]][version-link] [![Dependency Status][dependency]][dependency-link] [![devDependency Status][dev-dependency]][dev-dependency-link] [![Code Climate][climate]][climate-link] [![Test Coverage][coverage]][coverage-link] [![Inline docs][inch]][inch-link]
 
 ```js
-var action1 = new mops.Action('action1', function() {});
+var action1 = new mops.Action(function() {});
 
-var action2 = new mops.Action('action2', function() {
+var action2 = new mops.Action(function() {
     return new mops.Queue(this)
         .then(action1)
         .then(action2)
         .then(action3);
 });
 
-var action3 = new mops.Action('action3', function() {
+var action3 = new mops.Action(function() {
     return new Promise(function(resolve) {
         resolve(
             new mops.Queue(this)
