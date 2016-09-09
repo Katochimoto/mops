@@ -75,4 +75,25 @@ describe('mops', function () {
             assert.isFunction(newMops.action1);
         });
     });
+
+    describe('#error()', function () {
+        it('должен вернуть объект MopsError', function () {
+            let error = this.mops.error();
+
+            assert.instanceOf(error, MopsError, 'error is an instance of MopsError');
+        });
+
+        it('объект ошибки должен содержать свойство message с текстом ошибки', function () {
+            let msg = 'text error';
+            let error = this.mops.error(msg);
+
+            assert.strictEqual(error.message, msg);
+        });
+
+        it('объект ошибки должен содержать свойство name с текстом "MopsError"', function () {
+            let error = this.mops.error();
+
+            assert.strictEqual(error.name, 'MopsError');
+        });
+    });
 });

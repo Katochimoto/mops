@@ -4,6 +4,7 @@ const Promise = require('es6-promise').Promise;
 const mops = require('../src/mops');
 const symbol = require('../src/symbol');
 const MopsOperation = require('../src/operation');
+const MopsError = require('../src/error');
 
 describe('queue', function () {
     beforeEach(function () {
@@ -300,6 +301,21 @@ describe('queue', function () {
                 .catch(function (a1, a2) {
                     assert.equal(a1, 'test1');
                     assert.equal(a2, 'test2');
+                }, 'test1', 'test2')
+                .start();
+        });
+
+        it('должен передать аргументы в функции очереди', function () {
+            let queue = this.mops.queue();
+
+            return queue
+                .then(function () {
+                    throw this.error('test error');
+                })
+                .catch(function (a1, a2, error) {
+                    assert.equal(a1, 'test1');
+                    assert.equal(a2, 'test2');
+                    assert.instanceOf(error, MopsError, 'error is an instance of MopsError');
                 }, 'test1', 'test2')
                 .start();
         });

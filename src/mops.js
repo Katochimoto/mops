@@ -5,6 +5,7 @@ const toArray = require('lodash/toArray');
 const invariant = require('invariant');
 const mopsQueue = require('./queue');
 const mopsSymbol = require('./symbol');
+const MopsError = require('./error');
 
 /**
  * @typedef {Object} Mops
@@ -19,6 +20,14 @@ const mopsSymbol = require('./symbol');
 function MopsBase() {
     return this.clone();
 }
+
+/**
+ * @param {string} message
+ * @returns {MopsError}
+ */
+MopsBase.prototype.error = function (message) {
+    return new MopsError(message);
+};
 
 /**
  * @returns {Mops}

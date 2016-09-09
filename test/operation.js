@@ -30,14 +30,14 @@ describe('operation', function () {
 
     describe('#error()', function () {
         it('должен вернуть объект MopsError', function () {
-            let operation = new MopsOperation()
+            let operation = new MopsOperation();
             let error = operation.error();
 
             assert.instanceOf(error, MopsError, 'error is an instance of MopsError');
         });
 
         it('объект ошибки должен содержать свойство message с текстом ошибки', function () {
-            let operation = new MopsOperation()
+            let operation = new MopsOperation();
             let msg = 'text error';
             let error = operation.error(msg);
 
@@ -45,7 +45,7 @@ describe('operation', function () {
         });
 
         it('объект ошибки должен содержать свойство name с текстом "MopsError"', function () {
-            let operation = new MopsOperation()
+            let operation = new MopsOperation();
             let error = operation.error();
 
             assert.strictEqual(error.name, 'MopsError');

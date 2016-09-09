@@ -63,6 +63,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var invariant = __webpack_require__(47);
 	var mopsQueue = __webpack_require__(48);
 	var mopsSymbol = __webpack_require__(113);
+	var MopsError = __webpack_require__(188);
 
 	/**
 	 * @typedef {Object} Mops
@@ -77,6 +78,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	function MopsBase() {
 	    return this.clone();
 	}
+
+	/**
+	 * @param {string} message
+	 * @returns {MopsError}
+	 */
+	MopsBase.prototype.error = function (message) {
+	    return new MopsError(message);
+	};
 
 	/**
 	 * @returns {Mops}
