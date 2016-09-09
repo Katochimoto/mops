@@ -6,7 +6,7 @@ The operation queue.
 
 ```js
 var action1 = new mops.Action(function() {
-    return Promise.reject(mops.Error('blablabla'));
+    return Promise.reject(new mops.Error('blablabla'));
 });
 
 var action2 = new mops.Action(function() {
