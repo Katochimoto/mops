@@ -5,7 +5,9 @@ The operation queue.
 [![Build Status][build]][build-link] [![NPM version][version]][version-link] [![Dependency Status][dependency]][dependency-link] [![devDependency Status][dev-dependency]][dev-dependency-link] [![Code Climate][climate]][climate-link] [![Test Coverage][coverage]][coverage-link] [![Inline docs][inch]][inch-link]
 
 ```js
-var action1 = new mops.Action(function() {});
+var action1 = new mops.Action(function() {
+    return Promise.reject(mops.Error('blablabla'));
+});
 
 var action2 = new mops.Action(function() {
     return new mops.Queue(this)
