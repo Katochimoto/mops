@@ -145,9 +145,9 @@ describe('queue', function () {
 
             return queue
                 .cond(true, function (a1, a2) {
-                    assert.equal(a1, 'test1');
-                    assert.equal(a2, 'test2');
-                }, null, 'test1', 'test2')
+                    assert.equal(a1, 1);
+                    assert.equal(a2, 2);
+                }, 1, 2)
                 .start();
         });
 
@@ -234,9 +234,9 @@ describe('queue', function () {
 
             return queue
                 .then(function (a1, a2) {
-                    assert.equal(a1, 'test1');
-                    assert.equal(a2, 'test2');
-                }, null, 'test1', 'test2')
+                    assert.equal(a1, 1);
+                    assert.equal(a2, 2);
+                }, 1, 2)
                 .start();
         });
 

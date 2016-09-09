@@ -1629,6 +1629,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                args[_key3 - 3] = arguments[_key3];
 	            }
 
+	            if (!isUndefined(onRejected) && !isFunction(onRejected) && !isString(onRejected)) {
+	                args.unshift(onRejected);
+	                onRejected = undefined;
+	            }
+
 	            if (onFulfilled) {
 	                append(this, { action: onFulfilled, condition: condition, args: args });
 	            }

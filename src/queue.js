@@ -41,6 +41,11 @@ const QUEUE_MIXIN = {
 
     cond: {
         value: function (condition, onFulfilled, onRejected, ...args) {
+            if (!isUndefined(onRejected) && !isFunction(onRejected) && !isString(onRejected)) {
+                args.unshift(onRejected);
+                onRejected = undefined;
+            }
+
             if (onFulfilled) {
                 append(this, { action: onFulfilled, condition, args });
             }
