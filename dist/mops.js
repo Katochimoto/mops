@@ -63,7 +63,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var invariant = __webpack_require__(47);
 	var mopsQueue = __webpack_require__(48);
 	var mopsSymbol = __webpack_require__(113);
-	var MopsError = __webpack_require__(188);
 
 	/**
 	 * @typedef {Object} Mops
@@ -78,14 +77,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function MopsBase() {
 	    return this.clone();
 	}
-
-	/**
-	 * @param {string} message
-	 * @returns {MopsError}
-	 */
-	MopsBase.prototype.error = function (message) {
-	    return new MopsError(message);
-	};
 
 	/**
 	 * @returns {Mops}
@@ -5875,14 +5866,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var cloneDeep = __webpack_require__(133);
+	var MopsError = __webpack_require__(188);
+
+	module.exports = MopsOperation;
 
 	/**
 	 * @param {*} data
 	 * @returns {MopsOperation}
 	 */
-	module.exports = function MopsOperation(data) {
+	function MopsOperation(data) {
 	  Object.defineProperty(this, 'data', { value: cloneDeep(data) });
 	  return Object.freeze(this);
+	}
+
+	/**
+	 * @param {string} message
+	 * @returns {MopsError}
+	 */
+	MopsOperation.prototype.error = function (message) {
+	  return new MopsError(message);
 	};
 
 /***/ },
