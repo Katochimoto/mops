@@ -39,7 +39,8 @@ new mops.Queue(new mops.Context({ /* ... */ }))
         return new mops.Queue(this)
             .then(action1)
             .then(action2);
-    });
+    })
+    .start();
 ```
 
 ## Install
