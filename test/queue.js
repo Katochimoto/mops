@@ -123,7 +123,7 @@ describe('queue', function () {
             let queue = this.mops.queue();
 
             this.mops.define('action', action);
-            queue.cond(true, 'action');
+            queue.cond(true, this.mops.action);
 
             let task = queue[ symbol.QUEUE ][0];
             assert.equal(task.action, action);
@@ -134,7 +134,7 @@ describe('queue', function () {
             let queue = this.mops.queue();
 
             this.mops.define('action', action);
-            queue.cond(true, null, 'action');
+            queue.cond(true, null, this.mops.action);
 
             let task = queue[ symbol.QUEUE ][0];
             assert.equal(task.action, action);
@@ -212,7 +212,7 @@ describe('queue', function () {
             let queue = this.mops.queue();
 
             this.mops.define('action', action);
-            queue.then('action');
+            queue.then(this.mops.action);
 
             let task = queue[ symbol.QUEUE ][0];
             assert.equal(task.action, action);
@@ -223,7 +223,7 @@ describe('queue', function () {
             let queue = this.mops.queue();
 
             this.mops.define('action', action);
-            queue.then(null, 'action');
+            queue.then(null, this.mops.action);
 
             let task = queue[ symbol.QUEUE ][0];
             assert.equal(task.action, action);
@@ -271,7 +271,7 @@ describe('queue', function () {
             let queue = this.mops.queue();
 
             this.mops.define('action', action);
-            queue.catch('action');
+            queue.catch(this.mops.action);
 
             let task = queue[ symbol.QUEUE ][0];
             assert.equal(task.action, action);
@@ -344,7 +344,7 @@ describe('queue', function () {
             let queue = this.mops.queue();
 
             this.mops.define('action', action);
-            queue.always('action');
+            queue.always(this.mops.action);
 
             let task0 = queue[ symbol.QUEUE ][0];
             assert.equal(task0.action, action);

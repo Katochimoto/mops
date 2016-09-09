@@ -1,11 +1,11 @@
 const isFunction = require('lodash/isFunction');
-const isString = require('lodash/isString');
 const isObject = require('lodash/isObject');
 const isNil = require('lodash/isNil');
 const isNumber = require('lodash/isNumber');
 const isUndefined = require('lodash/isUndefined');
 const isError = require('lodash/isError');
 const wrap = require('lodash/wrap');
+const get = require('lodash/get');
 const assign = require('lodash/assign');
 const toArray = require('lodash/toArray');
 const invariant = require('invariant');
@@ -41,17 +41,19 @@ const QUEUE_MIXIN = {
 
     cond: {
         value: function (condition, onFulfilled, onRejected, ...args) {
-            if (!isUndefined(onRejected) && !isFunction(onRejected) && !isString(onRejected)) {
+            if (!isUndefined(onRejected) && !isFunction(onRejected)) {
                 args.unshift(onRejected);
                 onRejected = undefined;
             }
 
             if (onFulfilled) {
-                append(this, { action: onFulfilled, condition, args });
+                invariant(isFunction(onFulfilled), 'Add only possible method or function');
+                append(this, assign({ condition, args }, get(onFulfilled, mopsSymbol.SUPER, { action: onFulfilled })));
             }
 
             if (onRejected) {
-                append(this, { action: onRejected, rejected: true, condition, args });
+                invariant(isFunction(onRejected), 'Add only possible method or function');
+                append(this, assign({ condition, args, rejected: true }, get(onRejected, mopsSymbol.SUPER, { action: onRejected })));
             }
 
             return this;
@@ -148,10 +150,6 @@ function create(mops) {
  * @throws Add only possible method or function
  */
 function append(queue, params) {
-    if (isString(params.action) && isFunction(queue[ params.action ])) {
-        params = assign(params, queue[ params.action ][ mopsSymbol.SUPER ]);
-    }
-
     invariant(isFunction(params.action), 'Add only possible method or function');
 
     if (!isNumber(params.weight)) {
