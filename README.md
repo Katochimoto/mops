@@ -34,8 +34,8 @@ var queue = mops
     .action()
     .action1()
     .action2(param1, param2)
-    .then('action3', 'action4')
-    .catch('action5')
+    .then(mops.action3, mops.action4)
+    .catch(mops.action5)
     .then(function() {}, function() {})
     .catch(function() {})
     .then(function() {
@@ -48,7 +48,7 @@ var queue = mops
         /* optional onFulfilled */ function() {},
         /* optional onRejected */ function() {}
     )
-    .cond(true, 'action1', 'action2')
+    .cond(true, mops.action1, mops.action2)
     .start();
 
 
