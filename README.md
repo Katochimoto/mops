@@ -5,61 +5,38 @@ The operation queue.
 [![Build Status][build]][build-link] [![NPM version][version]][version-link] [![Dependency Status][dependency]][dependency-link] [![devDependency Status][dev-dependency]][dev-dependency-link] [![Code Climate][climate]][climate-link] [![Test Coverage][coverage]][coverage-link] [![Inline docs][inch]][inch-link]
 
 ```js
-mops.define('action1', function () {}, /* priority */ 100);
+var action1 = new mops.Action('action1', function() {});
 
-mops.define('action2', function() {
-    return mops
-        .action1()
-        .action2()
-        .action3();
+var action2 = new mops.Action('action2', function() {
+    return new mops.Queue(this)
+        .then(action1)
+        .then(action2)
+        .then(action3);
 });
 
-mops.define('action3', function() {
+var action3 = new mops.Action('action3', function() {
     return new Promise(function(resolve) {
         resolve(
-            mops.action1()
-                .action2()
-                .action3()
-                .start()
+            new mops.Queue(this)
+                .then(action1)
+                .then(action2)
+                .then(action3)
         );
     });
 });
 
-mops.define({
-    action1: function() {},
-    action2: function() {}
-});
-
-var queue = mops
-    .action()
-    .action1()
-    .action2(param1, param2)
-    .then(mops.action3, mops.action4)
-    .catch(mops.action5)
+new mops.Queue(new mops.Context({ /* ... */ }))
+    .then(action1, param1, param2)
+    .then(action2, action3)
+    .catch(action4)
+    .always(action5)
     .then(function() {}, function() {})
     .catch(function() {})
     .then(function() {
-        return mops
-            .action1()
-            .action2();
-    })
-    .cond(
-        /* condition: boolean, function */ function() {},
-        /* optional onFulfilled */ function() {},
-        /* optional onRejected */ function() {}
-    )
-    .cond(true, mops.action1, mops.action2)
-    .start();
-
-
-mops.queue()
-    .then(function() {})
-    .start();
-
-
-var customMops = mops.clone();
-customMops.define('action1', function() {});
-customMops.action1().start();
+        return new mops.Queue(this)
+            .then(action1)
+            .then(action2);
+    });
 ```
 
 ## Install
