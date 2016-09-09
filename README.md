@@ -23,6 +23,7 @@ var action3 = new mops.Action(function() {
                 .then(action1)
                 .then(action2)
                 .then(action3)
+                .start()
         );
     });
 });
