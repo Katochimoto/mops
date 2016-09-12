@@ -5,14 +5,14 @@ const partialRight = require('lodash/partialRight');
 const invariant = require('invariant');
 const Promise = require('es6-promise').Promise;
 const mopsSymbol = require('./symbol');
-const Context = require('./Context');
-const Action = require('./Action');
+const Context = require('./context');
+const Action = require('./action');
 
 module.exports = Queue;
 
 /**
  * @class
- * @param {mops.Context} [context]
+ * @param {Context} [context]
  */
 function Queue(context) {
     Object.defineProperty(this, mopsSymbol.QUEUE, { value: [], writable: true });

@@ -5,7 +5,7 @@ module.exports = Context;
 /**
  * @class
  * @param {*} data
- * @returns {mops.Context}
+ * @returns {Context}
  */
 function Context(data) {
     if (data instanceof Context) {

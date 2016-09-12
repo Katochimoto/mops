@@ -37,7 +37,7 @@ Action.resultReject = function (data) {
  * @param {function} action
  * @param {...*} args
  * @returns {function}
- * @this {mops.Context}
+ * @this {Context}
  * @private
  */
 function wrapAction(action, ...args) {
