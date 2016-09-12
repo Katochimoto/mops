@@ -83,7 +83,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * @class
-	 * @param {mops.Context} [context]
+	 * @param {Context} [context]
 	 */
 	function Queue(context) {
 	    Object.defineProperty(this, mopsSymbol.QUEUE, { value: [], writable: true });
@@ -5225,7 +5225,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @class
 	 * @param {*} data
-	 * @returns {mops.Context}
+	 * @returns {Context}
 	 */
 	function Context(data) {
 	    if (data instanceof Context) {
@@ -6970,7 +6970,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {function} action
 	 * @param {...*} args
 	 * @returns {function}
-	 * @this {mops.Context}
+	 * @this {Context}
 	 * @private
 	 */
 	function wrapAction(action) {
