@@ -1,261 +1,115 @@
 const isFunction = require('lodash/isFunction');
-const isObject = require('lodash/isObject');
-const isNil = require('lodash/isNil');
-const isNumber = require('lodash/isNumber');
 const isUndefined = require('lodash/isUndefined');
-const isError = require('lodash/isError');
-const wrap = require('lodash/wrap');
-const get = require('lodash/get');
-const assign = require('lodash/assign');
 const toArray = require('lodash/toArray');
+const partialRight = require('lodash/partialRight');
 const invariant = require('invariant');
 const Promise = require('es6-promise').Promise;
 const mopsSymbol = require('./symbol');
-const MopsOperation = require('./operation');
+const Context = require('./Context');
+const Action = require('./Action');
 
-exports.create = create;
-exports.append = append;
-
-/**
- * @constant
- * @type {Object}
- */
-const QUEUE_MIXIN = {
-    then: {
-        value: function () {
-            return this.cond(null, ...arguments);
-        }
-    },
-
-    catch: {
-        value: function (action, ...args) {
-            return this.cond(null, null, action, ...args);
-        }
-    },
-
-    always: {
-        value: function (action, ...args) {
-            return this.cond(null, action, action, ...args);
-        }
-    },
-
-    cond: {
-        value: function (condition, onFulfilled, onRejected, ...args) {
-            if (!isUndefined(onRejected) && !isFunction(onRejected)) {
-                args.unshift(onRejected);
-                onRejected = undefined;
-            }
-
-            if (onFulfilled) {
-                invariant(isFunction(onFulfilled), 'Add only possible method or function');
-                append(this, assign({ condition, args }, get(onFulfilled, mopsSymbol.SUPER, { action: onFulfilled })));
-            }
-
-            if (onRejected) {
-                invariant(isFunction(onRejected), 'Add only possible method or function');
-                append(this, assign({ condition, args, rejected: true }, get(onRejected, mopsSymbol.SUPER, { action: onRejected })));
-            }
-
-            return this;
-        }
-    },
-
-    start: {
-        /**
-         * @function start
-         * @memberof MopsQueue
-         * @param {*|MopsOperation} data
-         * @returns {Promise}
-         */
-        value: function (data) {
-            let tasks = this[ mopsSymbol.QUEUE ].sort(sortByWeight);
-            this[ mopsSymbol.QUEUE ] = [];
-
-            const operation = do {
-                if (data instanceof MopsOperation) {
-                    data;
-
-                } else {
-                    new MopsOperation(data);
-                }
-            };
-
-            return execute(operation, tasks, Promise.resolve());
-        }
-    },
-
-    queue: {
-        /**
-         * @function queue
-         * @memberof MopsQueue
-         * @returns {MopsQueue}
-         */
-        value: function () {
-            return this;
-        }
-    },
-
-    define: {
-        /**
-         * @function define
-         * @memberof MopsQueue
-         * @throws Cannot define a method in the queue
-         */
-        value: function () {
-            invariant(false, 'Cannot define a method in the queue');
-        }
-    },
-
-    clone: {
-        /**
-         * @function clone
-         * @memberof MopsQueue
-         * @throws The queue cannot be cloned
-         */
-        value: function () {
-            invariant(false, 'The queue cannot be cloned');
-        }
-    }
-};
+module.exports = Queue;
 
 /**
- * @typedef {Object} MopsQueue
  * @class
- * @augments Mops
+ * @param {mops.Context} [context]
  */
-
-/**
- * @param {Mops} mops
- * @returns {MopsQueue}
- */
-function create(mops) {
-    const MopsQueue = function () {
-        Object.defineProperty(this, mopsSymbol.QUEUE, { value: [], writable: true });
-    };
-
-    MopsQueue.prototype = Object.create(mops, QUEUE_MIXIN);
-    MopsQueue.prototype.constructor = MopsQueue;
-
-    return new MopsQueue();
+function Queue(context) {
+    Object.defineProperty(this, mopsSymbol.QUEUE, { value: [], writable: true });
+    Object.defineProperty(this, mopsSymbol.CONTEXT, { value: new Context(context) });
 }
 
 /**
- * @param {MopsQueue} queue
+ * @param {mops.Action|function} onFulfilled [description]
+ * @param {mops.Action|function} onRejected  [description]
+ * @param {...*} [args]
+ * @returns {mops.Queue}
+ */
+Queue.prototype.then = function (onFulfilled, onRejected, ...args) {
+    if (!isUndefined(onRejected) && !isFunction(onRejected)) {
+        args.unshift(onRejected);
+        onRejected = undefined;
+    }
+
+    const isErrored = Boolean((!onFulfilled && onRejected) || (onFulfilled === onRejected));
+
+    if (onFulfilled) {
+        append(this, { args, isErrored, action: onFulfilled });
+    }
+
+    if (onRejected) {
+        append(this, { args, isErrored, action: onRejected, rejected: true });
+    }
+
+    return this;
+};
+
+/**
+ * @param {mops.Action|function} action
+ * @param {...*} [args]
+ * @returns {mops.Queue}
+ */
+Queue.prototype.catch = function (action, ...args) {
+    return this.then(null, action, ...args);
+};
+
+/**
+ * @param {mops.Action|function} action
+ * @param {...*} [args]
+ * @returns {mops.Queue}
+ */
+Queue.prototype.always = function (action, ...args) {
+    return this.then(action, action, ...args);
+};
+
+/**
+ * @returns {Promise}
+ */
+Queue.prototype.start = function () {
+    const context = this[ mopsSymbol.CONTEXT ];
+    const tasks = this[ mopsSymbol.QUEUE ];
+    this[ mopsSymbol.QUEUE ] = [];
+
+    let promise = Promise.resolve();
+
+    for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[ i ];
+        const action = do {
+            if (task.isErrored) {
+                partialRight(task.action.bind(context), ...toArray(task.args));
+
+            } else {
+                task.action.bind(context, ...toArray(task.args));
+            }
+        };
+
+        promise = do {
+            if (task.rejected) {
+                promise.then(Action.resultResolve, action);
+
+            } else {
+                promise.then(action, Action.resultReject);
+            }
+        };
+    }
+
+    return promise;
+};
+
+/**
+ * @param {Queue} queue
  * @param {Object} params
- * @param {string|function} params.action
- * @param {number} [params.weight=100]
- * @param {boolean} [params.rejected=false]
- * @param {boolean|function|Promise} [params.condition=true]
- * @returns {MopsQueue}
- * @throws Add only possible method or function
+ * @param {function} params.action
+ * @returns {Queue}
+ * @throws Add only possible function
  */
 function append(queue, params) {
-    invariant(isFunction(params.action), 'Add only possible method or function');
+    invariant(isFunction(params.action), 'Add only possible function');
 
-    if (!isNumber(params.weight)) {
-        params.weight = 100;
+    if (!params.action.hasOwnProperty(mopsSymbol.SUPER)) {
+        params.action = new Action(params.action);
     }
 
     queue[ mopsSymbol.QUEUE ].push(params);
     return queue;
-}
-
-/**
- * @param {function} action
- * @param {...*} args
- * @returns {function}
- * @private
- */
-function wrapAction(action, ...args) {
-    let data = action(...args);
-    return result(data) || data;
-}
-
-/**
- * @param {boolean|function|Promise} condition
- * @param {function} action
- * @param {...*} args
- * @returns {function}
- * @private
- */
-function wrapCondition(condition, action, ...args) {
-    condition = isFunction(condition) ? condition() : condition;
-
-    return Promise.resolve(condition).then(function (data) {
-        if (isUndefined(data) || Boolean(data)) {
-            return wrapAction(action, ...args);
-        }
-    });
-}
-
-/**
- * @param {*} data
- * @returns {?Promise}
- * @private
- */
-function result(data) {
-    if (isObject(data) && data.hasOwnProperty(mopsSymbol.QUEUE)) {
-        return data.start();
-
-    } else if (isError(data)) {
-        return Promise.reject(data);
-    }
-}
-
-/**
- * @param {MopsOperation} operation
- * @param {array} tasks
- * @param {Promise} promise
- * @returns {Promise}
- * @private
- */
-function execute(operation, tasks, promise) {
-    let task = tasks.shift();
-
-    if (!task) {
-        return promise;
-    }
-
-    let { action, condition, rejected, args } = task;
-    let wrapper = do {
-        if (isNil(condition)) {
-            wrapAction;
-
-        } else {
-            wrap(condition, wrapCondition);
-        }
-    };
-
-    action = wrap(action.bind(operation, ...toArray(args)), wrapper);
-
-    promise = do {
-        if (rejected) {
-            promise.catch(action);
-
-        } else {
-            promise.then(action);
-        }
-    };
-
-    return execute(operation, tasks, promise.then(
-        data => result(data) || Promise.resolve(),
-        data => result(data) || Promise.reject()
-    ));
-}
-
-/**
- * @param {Object} p1
- * @param {Object} p2
- * @returns {number}
- * @private
- */
-function sortByWeight(p1, p2) {
-    if (p1.weight > p2.weight) {
-        return 1;
-
-    } else if (p1.weight < p2.weight) {
-        return -1;
-    }
-
-    return 0;
 }
