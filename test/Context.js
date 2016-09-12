@@ -1,5 +1,5 @@
 const assert = require('chai').assert;
-const Context = require('../src/Context');
+const Context = require('../src/context');
 
 describe('Context', function () {
 

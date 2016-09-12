@@ -2,9 +2,9 @@ const assert = require('chai').assert;
 const sinon = require('sinon');
 const Promise = require('es6-promise').Promise;
 
-const MopsError = require('../src/Error');
-const Action = require('../src/Action');
-const Queue = require('../src/Queue');
+const MopsError = require('../src/error');
+const Action = require('../src/action');
+const Queue = require('../src/queue');
 
 describe('queue', function () {
     beforeEach(function () {
