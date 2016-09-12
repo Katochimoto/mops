@@ -2,11 +2,9 @@ const assert = require('chai').assert;
 const sinon = require('sinon');
 const Promise = require('es6-promise').Promise;
 
-const MopsError = require('../src/error');
-const Action = require('../src/action');
-const Queue = require('../src/queue');
+const mops = require('../src/mops');
 
-describe('queue', function () {
+describe('Queue', function () {
     beforeEach(function () {
         this.sinon = sinon.sandbox.create();
     });
@@ -20,7 +18,7 @@ describe('queue', function () {
 
         it('должен вызвать метод onFulfilled при успешном резолве очереди', function () {
             let action = this.sinon.spy();
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(action)
@@ -30,9 +28,21 @@ describe('queue', function () {
                 });
         });
 
+        it('должен вызвать callback mops.Action при успешном резолве очереди', function () {
+            let action = this.sinon.spy();
+            let queue = new mops.Queue();
+
+            return queue
+                .then(new mops.Action(action))
+                .start()
+                .then(function () {
+                    assert(action.calledOnce);
+                });
+        });
+
         it('должен вызвать метод onRejected при неудачном резолве очереди', function () {
             let action = this.sinon.spy();
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(() => Promise.reject())
@@ -43,8 +53,21 @@ describe('queue', function () {
                 });
         });
 
+        it('должен вызвать callback mops.Action при неудачном резолве очереди', function () {
+            let action = this.sinon.spy();
+            let queue = new mops.Queue();
+
+            return queue
+                .then(() => Promise.reject())
+                .then(null, new mops.Action(action))
+                .start()
+                .then(function () {
+                    assert(action.calledOnce);
+                });
+        });
+
         it('должен передать аргументы в функцию onFulfilled', function () {
-            let queue = new Queue();
+            let queue = new mops.Queue();
             let arg1 = 'test1';
             let arg2 = 'test2';
 
@@ -57,7 +80,7 @@ describe('queue', function () {
         });
 
         it('должен передать аргументы в функцию onRejected', function () {
-            let queue = new Queue();
+            let queue = new mops.Queue();
             let arg1 = 'test1';
             let arg2 = 'test2';
 
@@ -71,7 +94,7 @@ describe('queue', function () {
         });
 
         it('объект ошибки должен быть передан первым аргументом функции onRejected', function () {
-            let queue = new Queue();
+            let queue = new mops.Queue();
             let arg1 = 'test1';
             let arg2 = 'test2';
             let err = new Error('undefined error');
@@ -90,7 +113,7 @@ describe('queue', function () {
     describe('#catch()', function () {
         it('должен вызвать метод onRejected при неудачном резолве очереди', function () {
             let action = this.sinon.spy();
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(() => Promise.reject())
@@ -102,7 +125,7 @@ describe('queue', function () {
         });
 
         it('должен пробросить ошибку в следующий обработчик', function () {
-            let queue = new Queue();
+            let queue = new mops.Queue();
             let err = new Error('undefined error');
 
             return queue
@@ -117,7 +140,7 @@ describe('queue', function () {
         });
 
         it('должен передать аргументы в функции очереди', function () {
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(() => Promise.reject())
@@ -129,7 +152,7 @@ describe('queue', function () {
         });
 
         it('объект ошибки должен быть передан первым аргументом функции onRejected', function () {
-            let queue = new Queue();
+            let queue = new mops.Queue();
             let err = new Error('undefined error');
 
             return queue
@@ -148,7 +171,7 @@ describe('queue', function () {
     describe('#always()', function () {
         it('должен вызвать метод при успешном резолве очереди', function () {
             let action = this.sinon.spy();
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .always(action)
@@ -160,7 +183,7 @@ describe('queue', function () {
 
         it('должен вызвать метод при неудачном резолве очереди', function () {
             let action = this.sinon.spy();
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(() => Promise.reject())
@@ -172,7 +195,7 @@ describe('queue', function () {
         });
 
         it('должен передать аргументы в функции очереди', function () {
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .always(function (error, a1, a2) {
@@ -183,7 +206,7 @@ describe('queue', function () {
         });
 
         it('объект ошибки должен быть передан первым аргументом функции onRejected', function () {
-            let queue = new Queue();
+            let queue = new mops.Queue();
             let err = new Error('undefined error');
 
             return queue
@@ -200,7 +223,7 @@ describe('queue', function () {
     describe('#start()', function () {
         it('должен вызвать метод', function () {
             let action = this.sinon.spy();
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(action)
@@ -213,7 +236,7 @@ describe('queue', function () {
         it('должен вызвать цепочку методов', function () {
             let action1 = this.sinon.spy();
             let action2 = this.sinon.spy();
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(action1)
@@ -229,7 +252,7 @@ describe('queue', function () {
         it('методы могут возвращать промис', function () {
             let action1 = this.sinon.spy(() => Promise.resolve());
             let action2 = this.sinon.spy(() => Promise.resolve());
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(action1)
@@ -247,7 +270,7 @@ describe('queue', function () {
             let action2 = this.sinon.spy(() => Promise.resolve());
             let action3 = this.sinon.spy(() => Promise.resolve());
             let action4 = this.sinon.spy(() => Promise.resolve());
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
                 .then(action1)
@@ -267,10 +290,10 @@ describe('queue', function () {
         it('методы могут возвращать другие цепочки', function () {
             let action1 = this.sinon.spy();
             let action2 = this.sinon.spy();
-            let queue = new Queue();
+            let queue = new mops.Queue();
 
             return queue
-                .then(() => (new Queue()).then(action1))
+                .then(() => (new mops.Queue()).then(action1))
                 .then(action2)
                 .start()
                 .then(() => {
@@ -283,12 +306,12 @@ describe('queue', function () {
         it('контекст вызова сохраняется при внутреннем вызове start', function () {
             let context;
             let action = this.sinon.spy();
-            let queue = new Queue(context);
+            let queue = new mops.Queue(context);
 
             return queue
                 .then(function () {
                     context = this;
-                    return (new Queue(this)).then(action);
+                    return (new mops.Queue(this)).then(action);
                 })
                 .start()
                 .then(function () {
