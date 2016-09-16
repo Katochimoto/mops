@@ -60,6 +60,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.Action = __webpack_require__(181);
 	exports.Context = __webpack_require__(122);
 	exports.Error = __webpack_require__(185);
+	exports.Checked = __webpack_require__(188);
 
 /***/ },
 /* 1 */
@@ -4781,6 +4782,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.CONTEXT = _Symbol('mops-context');
 	exports.QUEUE = _Symbol('mops-queue');
 	exports.SUPER = _Symbol('mops-action-super');
+	exports.CHECKED = _Symbol('mops-checked');
 
 /***/ },
 /* 104 */
@@ -7233,6 +7235,241 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = baseToString;
+
+
+/***/ },
+/* 188 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var castArray = __webpack_require__(189);
+	var flattenDeep = __webpack_require__(190);
+	var mopsSymbol = __webpack_require__(103);
+
+	module.exports = Checked;
+
+	/**
+	 * @class
+	 */
+	function Checked() {
+	    Object.defineProperty(this, mopsSymbol.CHECKED, { value: new Set(flattenDeep(arguments)) });
+	}
+
+	Checked.prototype.check = function (obj) {
+	    this[mopsSymbol.CHECKED].add(obj);
+	};
+
+	Checked.prototype.uncheck = function (obj) {
+	    this[mopsSymbol.CHECKED].delete(obj);
+	};
+
+	Checked.prototype.getObjects = function () {
+	    return new Set(this[mopsSymbol.CHECKED]);
+	};
+
+	Checked.prototype.getGroupObjects = function (getGroups) {
+	    var checked = new Set(this[mopsSymbol.CHECKED]);
+	    var groups = new Map();
+
+	    checked.forEach(function (item) {
+	        var groupSet = groups.get(item);
+
+	        if (groupSet && groupSet.size) {
+	            groupSet.forEach(clearFromGroup, checked);
+	            groupSet.clear();
+	            groups.set(item, null);
+	        }
+
+	        var itemGroups = castArray(getGroups(item));
+
+	        if (itemGroups.length) {
+	            var inGroup = itemGroups.some(checkInGroup, groups);
+
+	            if (inGroup) {
+	                checked.delete(item);
+	            } else {
+	                itemGroups.map(getGroupSet, groups).forEach(addInGroupSet, item);
+	            }
+	        }
+	    });
+
+	    groups.clear();
+	    return checked;
+	};
+
+	function getGroupSet(group) {
+	    var sgroup = this.get(group);
+
+	    if (!sgroup) {
+	        sgroup = new Set();
+	        this.set(group, sgroup);
+	    }
+
+	    return sgroup;
+	}
+
+	function addInGroupSet(sgroup) {
+	    sgroup.add(this);
+	}
+
+	function checkInGroup(group) {
+	    return this.get(group) === null;
+	}
+
+	function clearFromGroup(item) {
+	    this.delete(item);
+	}
+
+/***/ },
+/* 189 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isArray = __webpack_require__(27);
+
+	/**
+	 * Casts `value` as an array if it's not one.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.4.0
+	 * @category Lang
+	 * @param {*} value The value to inspect.
+	 * @returns {Array} Returns the cast array.
+	 * @example
+	 *
+	 * _.castArray(1);
+	 * // => [1]
+	 *
+	 * _.castArray({ 'a': 1 });
+	 * // => [{ 'a': 1 }]
+	 *
+	 * _.castArray('abc');
+	 * // => ['abc']
+	 *
+	 * _.castArray(null);
+	 * // => [null]
+	 *
+	 * _.castArray(undefined);
+	 * // => [undefined]
+	 *
+	 * _.castArray();
+	 * // => []
+	 *
+	 * var array = [1, 2, 3];
+	 * console.log(_.castArray(array) === array);
+	 * // => true
+	 */
+	function castArray() {
+	  if (!arguments.length) {
+	    return [];
+	  }
+	  var value = arguments[0];
+	  return isArray(value) ? value : [value];
+	}
+
+	module.exports = castArray;
+
+
+/***/ },
+/* 190 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseFlatten = __webpack_require__(191);
+
+	/** Used as references for various `Number` constants. */
+	var INFINITY = 1 / 0;
+
+	/**
+	 * Recursively flattens `array`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 3.0.0
+	 * @category Array
+	 * @param {Array} array The array to flatten.
+	 * @returns {Array} Returns the new flattened array.
+	 * @example
+	 *
+	 * _.flattenDeep([1, [2, [3, [4]], 5]]);
+	 * // => [1, 2, 3, 4, 5]
+	 */
+	function flattenDeep(array) {
+	  var length = array ? array.length : 0;
+	  return length ? baseFlatten(array, INFINITY) : [];
+	}
+
+	module.exports = flattenDeep;
+
+
+/***/ },
+/* 191 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayPush = __webpack_require__(163),
+	    isFlattenable = __webpack_require__(192);
+
+	/**
+	 * The base implementation of `_.flatten` with support for restricting flattening.
+	 *
+	 * @private
+	 * @param {Array} array The array to flatten.
+	 * @param {number} depth The maximum recursion depth.
+	 * @param {boolean} [predicate=isFlattenable] The function invoked per iteration.
+	 * @param {boolean} [isStrict] Restrict to values that pass `predicate` checks.
+	 * @param {Array} [result=[]] The initial result value.
+	 * @returns {Array} Returns the new flattened array.
+	 */
+	function baseFlatten(array, depth, predicate, isStrict, result) {
+	  var index = -1,
+	      length = array.length;
+
+	  predicate || (predicate = isFlattenable);
+	  result || (result = []);
+
+	  while (++index < length) {
+	    var value = array[index];
+	    if (depth > 0 && predicate(value)) {
+	      if (depth > 1) {
+	        // Recursively flatten arrays (susceptible to call stack limits).
+	        baseFlatten(value, depth - 1, predicate, isStrict, result);
+	      } else {
+	        arrayPush(result, value);
+	      }
+	    } else if (!isStrict) {
+	      result[result.length] = value;
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = baseFlatten;
+
+
+/***/ },
+/* 192 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Symbol = __webpack_require__(6),
+	    isArguments = __webpack_require__(42),
+	    isArray = __webpack_require__(27);
+
+	/** Built-in value references. */
+	var spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
+
+	/**
+	 * Checks if `value` is a flattenable `arguments` object or array.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is flattenable, else `false`.
+	 */
+	function isFlattenable(value) {
+	  return isArray(value) || isArguments(value) ||
+	    !!(spreadableSymbol && value && value[spreadableSymbol]);
+	}
+
+	module.exports = isFlattenable;
 
 
 /***/ }
