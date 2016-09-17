@@ -7471,14 +7471,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
-	 * @param {function} getGroups
+	 * @param {function} getItemGroups
 	 * @returns {Set}
 	 */
-	Checked.prototype.getGroupObjects = function (getGroups) {
+	Checked.prototype.getGroupsObjects = function (getItemGroups) {
 	    var checked = new Set(this[mopsSymbol.CHECKED]);
 	    var groups = new Map();
 
-	    checked.forEach(function (item) {
+	    checked.forEach(function checkedIterator(item) {
 	        var sgroup = groups.get(item);
 
 	        if (sgroup && sgroup.length) {
@@ -7486,7 +7486,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            groups.set(item, null);
 	        }
 
-	        var itemGroups = castArray(getGroups(item) || []);
+	        var itemGroups = castArray(getItemGroups(item) || []);
 
 	        if (itemGroups.length) {
 	            var inGroup = itemGroups.some(checkInGroup, groups);
@@ -7501,6 +7501,24 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    groups.clear();
 	    return checked;
+	};
+
+	/**
+	 * @param {function} getItemGroups
+	 * @returns {Map}
+	 */
+	Checked.prototype.getGroups = function (getItemGroups) {
+	    var groups = new Map();
+
+	    this[mopsSymbol.CHECKED].forEach(function checkedIterator(item) {
+	        var itemGroups = castArray(getItemGroups(item) || []);
+
+	        if (itemGroups.length) {
+	            itemGroups.map(getSgroup, groups).forEach(addInSgroup, item);
+	        }
+	    });
+
+	    return groups;
 	};
 
 	function getSgroup(group) {

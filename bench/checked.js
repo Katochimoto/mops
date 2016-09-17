@@ -15,30 +15,56 @@
     });
 
     suite
-    .add('mops.Checked#getGroupObjects с произвольными группами', function() {
+    .add('mops.Checked#getGroupsObjects с произвольными группами', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupObjects(getGroups);
+        checked.getGroupsObjects(getGroups);
     })
-    .add('mops.Checked#getGroupObjects с произвольным количеством (от 0 до 5) произвольных групп', function() {
+    .add('mops.Checked#getGroupsObjects с произвольным количеством (от 0 до 5) произвольных групп', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupObjects(getGroupsRandon);
+        checked.getGroupsObjects(getGroupsRandon);
     })
-    .add('mops.Checked#getGroupObjects без групп', function() {
+    .add('mops.Checked#getGroupsObjects без групп', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupObjects(getGroupsEmpty);
+        checked.getGroupsObjects(getGroupsEmpty);
     })
-    .add('mops.Checked#getGroupObjects с исходным объектом в виде группы', function() {
+    .add('mops.Checked#getGroupsObjects с исходным объектом в виде группы', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupObjects(getGroupsSelf);
+        checked.getGroupsObjects(getGroupsSelf);
     })
-    .add('mops.Checked#getGroupObjects с двумя постоянно разными группами', function() {
+    .add('mops.Checked#getGroupsObjects с двумя постоянно разными группами', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupObjects(getGroupsOther);
+        checked.getGroupsObjects(getGroupsOther);
     })
-    .add('mops.Checked#getGroupObjects с одной общей группой', function() {
+    .add('mops.Checked#getGroupsObjects с одной общей группой', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupObjects(getGroupsOne);
+        checked.getGroupsObjects(getGroupsOne);
     })
+
+    .add('mops.Checked#getGroups с произвольными группами', function() {
+        var checked = new mops.Checked(objects);
+        checked.getGroups(getGroups);
+    })
+    .add('mops.Checked#getGroups с произвольным количеством (от 0 до 5) произвольных групп', function() {
+        var checked = new mops.Checked(objects);
+        checked.getGroups(getGroupsRandon);
+    })
+    .add('mops.Checked#getGroups без групп', function() {
+        var checked = new mops.Checked(objects);
+        checked.getGroups(getGroupsEmpty);
+    })
+    .add('mops.Checked#getGroups с исходным объектом в виде группы', function() {
+        var checked = new mops.Checked(objects);
+        checked.getGroups(getGroupsSelf);
+    })
+    .add('mops.Checked#getGroups с двумя постоянно разными группами', function() {
+        var checked = new mops.Checked(objects);
+        checked.getGroups(getGroupsOther);
+    })
+    .add('mops.Checked#getGroups с одной общей группой', function() {
+        var checked = new mops.Checked(objects);
+        checked.getGroups(getGroupsOne);
+    })
+
     .add('mops.Checked#getObjects', function() {
         var checked = new mops.Checked(objects);
         checked.getObjects();

@@ -39,14 +39,14 @@ Checked.prototype.getObjects = function () {
 };
 
 /**
- * @param {function} getGroups
+ * @param {function} getItemGroups
  * @returns {Set}
  */
-Checked.prototype.getGroupObjects = function (getGroups) {
+Checked.prototype.getGroupsObjects = function (getItemGroups) {
     const checked = new Set(this[ mopsSymbol.CHECKED ]);
     const groups = new Map();
 
-    checked.forEach(function (item) {
+    checked.forEach(function checkedIterator(item) {
         const sgroup = groups.get(item);
 
         if (sgroup && sgroup.length) {
@@ -54,7 +54,7 @@ Checked.prototype.getGroupObjects = function (getGroups) {
             groups.set(item, null);
         }
 
-        const itemGroups = castArray(getGroups(item) || []);
+        const itemGroups = castArray(getItemGroups(item) || []);
 
         if (itemGroups.length) {
             const inGroup = itemGroups.some(checkInGroup, groups);
@@ -72,6 +72,26 @@ Checked.prototype.getGroupObjects = function (getGroups) {
 
     groups.clear();
     return checked;
+};
+
+/**
+ * @param {function} getItemGroups
+ * @returns {Map}
+ */
+Checked.prototype.getGroups = function (getItemGroups) {
+    const groups = new Map();
+
+    this[ mopsSymbol.CHECKED ].forEach(function checkedIterator(item) {
+        const itemGroups = castArray(getItemGroups(item) || []);
+
+        if (itemGroups.length) {
+            itemGroups
+                .map(getSgroup, groups)
+                .forEach(addInSgroup, item);
+        }
+    });
+
+    return groups;
 };
 
 function getSgroup(group) {

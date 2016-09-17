@@ -40,7 +40,48 @@ describe('Checked', function () {
         });
     });
 
-    describe('#getGroupObjects()', function () {
+    describe('#getGroups', function () {
+        it('должен вернуть пустой Map, если нет выбранных элементов', function () {
+            let group = function () { return []; };
+            let checked = new mops.Checked();
+            let items = checked.getGroups(group);
+            assert.equal(items.size, 0);
+        });
+
+        it('должен вернуть группу элементов', function () {
+            let o1 = {};
+            let o2 = {};
+            let o3 = {};
+            let group = function (item) {
+                if (item === o1 || item === o2) {
+                    return o3;
+                }
+            };
+
+            let checked = new mops.Checked();
+            checked.check(o1);
+            checked.check(o2);
+
+            let items = checked.getGroups(group);
+            assert.isOk(items.has(o3));
+            assert.deepEqual(items.get(o3), [ o1, o2 ]);
+        });
+
+        it('должен вернуть пустой Map, если у элементов нет групп', function () {
+            let o1 = {};
+            let o2 = {};
+            let group = function () {};
+
+            let checked = new mops.Checked();
+            checked.check(o1);
+            checked.check(o2);
+
+            let items = checked.getGroups(group);
+            assert.equal(items.size, 0);
+        });
+    });
+
+    describe('#getGroupsObjects()', function () {
         it('если нет групп, возвращает полный набор', function () {
             let o1 = {};
             let o2 = {};
@@ -50,7 +91,7 @@ describe('Checked', function () {
             checked.check(o1);
             checked.check(o2);
 
-            let items = checked.getGroupObjects(group);
+            let items = checked.getGroupsObjects(group);
 
             assert.isOk(items.has(o1));
             assert.isOk(items.has(o2));
@@ -71,7 +112,7 @@ describe('Checked', function () {
             checked.check(o2);
             checked.check(o3);
 
-            let items = checked.getGroupObjects(group);
+            let items = checked.getGroupsObjects(group);
 
             assert.isNotOk(items.has(o1));
             assert.isNotOk(items.has(o2));
@@ -93,7 +134,7 @@ describe('Checked', function () {
             checked.check(o2);
             checked.check(o3);
 
-            let items = checked.getGroupObjects(group);
+            let items = checked.getGroupsObjects(group);
 
             assert.isNotOk(items.has(o1));
             assert.isOk(items.has(o2));
