@@ -3,6 +3,18 @@ const mops = require('../src/mops');
 
 describe('Checked', function () {
 
+    describe('#reset()', function () {
+        it('должен удалить все элементы из списка', function () {
+            let o1 = {};
+            let o2 = {};
+            let checked = new mops.Checked(o1, o2);
+            checked.reset();
+            let items = checked.getObjects();
+
+            assert.equal(items.size, 0);
+        });
+    });
+
     describe('#uncheck()', function () {
         it('должен удалить элемент из списка', function () {
             let o1 = {};

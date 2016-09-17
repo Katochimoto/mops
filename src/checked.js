@@ -21,6 +21,10 @@ Checked.prototype.uncheck = function (obj) {
     this[ mopsSymbol.CHECKED ].delete(obj);
 };
 
+Checked.prototype.reset = function () {
+    this[ mopsSymbol.CHECKED ].clear();
+};
+
 Checked.prototype.getObjects = function () {
     return new Set(this[ mopsSymbol.CHECKED ]);
 };
