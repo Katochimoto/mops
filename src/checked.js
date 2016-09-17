@@ -37,7 +37,7 @@ Checked.prototype.getGroupObjects = function (getGroups) {
             groups.set(item, null);
         }
 
-        const itemGroups = castArray(getGroups(item));
+        const itemGroups = castArray(getGroups(item) || []);
 
         if (itemGroups.length) {
             const inGroup = itemGroups.some(checkInGroup, groups);

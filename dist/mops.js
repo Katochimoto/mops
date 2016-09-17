@@ -7282,7 +7282,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            groups.set(item, null);
 	        }
 
-	        var itemGroups = castArray(getGroups(item));
+	        var itemGroups = castArray(getGroups(item) || []);
 
 	        if (itemGroups.length) {
 	            var inGroup = itemGroups.some(checkInGroup, groups);
