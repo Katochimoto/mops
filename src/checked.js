@@ -13,10 +13,16 @@ function Checked() {
     Object.defineProperty(this, mopsSymbol.CHECKED, { value: new Set(flattenDeep(arguments)) });
 }
 
+/**
+ * @param {*} obj
+ */
 Checked.prototype.check = function (obj) {
     this[ mopsSymbol.CHECKED ].add(obj);
 };
 
+/**
+ * @param {*} obj
+ */
 Checked.prototype.uncheck = function (obj) {
     this[ mopsSymbol.CHECKED ].delete(obj);
 };
@@ -25,10 +31,17 @@ Checked.prototype.reset = function () {
     this[ mopsSymbol.CHECKED ].clear();
 };
 
+/**
+ * @returns {Set}
+ */
 Checked.prototype.getObjects = function () {
     return new Set(this[ mopsSymbol.CHECKED ]);
 };
 
+/**
+ * @param {function} getGroups
+ * @returns {Set}
+ */
 Checked.prototype.getGroupObjects = function (getGroups) {
     const checked = new Set(this[ mopsSymbol.CHECKED ]);
     const groups = new Map();
