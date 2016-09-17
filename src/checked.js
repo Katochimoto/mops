@@ -1,5 +1,7 @@
 const castArray = require('lodash/castArray');
 const flattenDeep = require('lodash/flattenDeep');
+const Set = require('es6-set');
+const Map = require('es6-map');
 const mopsSymbol = require('./symbol');
 
 module.exports = Checked;
@@ -28,11 +30,10 @@ Checked.prototype.getGroupObjects = function (getGroups) {
     const groups = new Map();
 
     checked.forEach(function (item) {
-        const groupSet = groups.get(item);
+        const sgroup = groups.get(item);
 
-        if (groupSet && groupSet.size) {
-            groupSet.forEach(clearFromGroup, checked);
-            groupSet.clear();
+        if (sgroup && sgroup.length) {
+            sgroup.forEach(clearFromGroup, checked);
             groups.set(item, null);
         }
 
@@ -46,8 +47,8 @@ Checked.prototype.getGroupObjects = function (getGroups) {
 
             } else {
                 itemGroups
-                    .map(getGroupSet, groups)
-                    .forEach(addInGroupSet, item);
+                    .map(getSgroup, groups)
+                    .forEach(addInSgroup, item);
             }
         }
     });
@@ -56,19 +57,19 @@ Checked.prototype.getGroupObjects = function (getGroups) {
     return checked;
 };
 
-function getGroupSet(group) {
+function getSgroup(group) {
     let sgroup = this.get(group);
 
     if (!sgroup) {
-        sgroup = new Set();
+        sgroup = [];
         this.set(group, sgroup);
     }
 
     return sgroup;
 }
 
-function addInGroupSet(sgroup) {
-    sgroup.add(this);
+function addInSgroup(sgroup) {
+    sgroup.push(this);
 }
 
 function checkInGroup(group) {
