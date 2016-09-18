@@ -78,7 +78,7 @@
         checked.uncheck({});
     });
 
-    suite.run({ 'async': true });
+    suite.run({ async: true, queued: true });
 
 
 

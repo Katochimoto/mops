@@ -23,9 +23,10 @@ function outputComplete(run) {
 function outputCycle(event) {
     var text = String(event.target);
     document.getElementById('out').appendChild(document.createElement('div')).innerText = text;
-    console.log(text, event);
+    console.log(text);
 }
 </script>
+<script src="queue.js"></script>
 <script src="checked.js"></script>
 </body>
 </html>
