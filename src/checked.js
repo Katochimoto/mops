@@ -10,7 +10,9 @@ module.exports = Checked;
  * @class
  */
 function Checked() {
-    Object.defineProperty(this, mopsSymbol.CHECKED, { value: new Set(flattenDeep(arguments)) });
+    Object.defineProperty(this, mopsSymbol.CHECKED, {
+        value: new Set(flattenDeep(arguments))
+    });
 }
 
 /**
