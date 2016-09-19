@@ -32,6 +32,13 @@ Checked.prototype.reset = function () {
 };
 
 /**
+ * @returns {number}
+ */
+Checked.prototype.size = function () {
+    return this[ mopsSymbol.CHECKED ].size;
+};
+
+/**
  * @returns {Set}
  */
 Checked.prototype.getObjects = function () {

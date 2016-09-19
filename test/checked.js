@@ -28,6 +28,16 @@ describe('Checked', function () {
         });
     });
 
+    describe('#size()', function () {
+        it('должен вернуть количество элементов в списке', function () {
+            let o1 = {};
+            let o2 = {};
+            let checked = new mops.Checked(o1, o2);
+
+            assert.equal(checked.size(), 2);
+        });
+    });
+
     describe('#getObjects()', function () {
         it('должен вернуть полный список', function () {
             let o1 = {};
