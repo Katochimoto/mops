@@ -28,6 +28,23 @@ describe('Checked', function () {
         });
     });
 
+    describe('#has()', function () {
+        it('должен вернуть true если объект принадлежит набору', function () {
+            let o1 = {};
+            let checked = new mops.Checked(o1);
+
+            assert.isOk(checked.has(o1));
+        });
+
+        it('должен вернуть false если объект не принадлежит набору', function () {
+            let o1 = {};
+            let o2 = {};
+            let checked = new mops.Checked(o1);
+
+            assert.isNotOk(checked.has(o2));
+        });
+    });
+
     describe('#size()', function () {
         it('должен вернуть количество элементов в списке', function () {
             let o1 = {};

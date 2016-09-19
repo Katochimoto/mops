@@ -6979,6 +6979,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this[mopsSymbol.CHECKED].delete(obj);
 	};
 
+	/**
+	 * @param {*} obj
+	 * @returns {boolean}
+	 */
+	Checked.prototype.has = function (obj) {
+	    return this[mopsSymbol.CHECKED].has(obj);
+	};
+
 	Checked.prototype.reset = function () {
 	    this[mopsSymbol.CHECKED].clear();
 	};
