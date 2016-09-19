@@ -1,4 +1,5 @@
-const cloneDeep = require('lodash/cloneDeep');
+const cloneDeepWith = require('lodash/cloneDeepWith');
+const Checked = require('./checked');
 
 module.exports = Context;
 
@@ -12,6 +13,12 @@ function Context(data) {
         return data;
     }
 
-    Object.defineProperty(this, 'data', { value: cloneDeep(data) });
+    Object.defineProperty(this, 'data', { value: cloneDeepWith(data, cloneCustomizer) });
     return Object.freeze(this);
+}
+
+function cloneCustomizer(value) {
+    if (value instanceof Checked) {
+        return value;
+    }
 }
