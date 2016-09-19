@@ -57,10 +57,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	exports.Queue = __webpack_require__(1);
-	exports.Action = __webpack_require__(226);
+	exports.Action = __webpack_require__(234);
 	exports.Context = __webpack_require__(122);
-	exports.Error = __webpack_require__(230);
-	exports.Checked = __webpack_require__(181);
+	exports.Error = __webpack_require__(238);
+	exports.Checked = __webpack_require__(189);
 
 /***/ },
 /* 1 */
@@ -78,7 +78,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Promise = __webpack_require__(98).Promise;
 	var mopsSymbol = __webpack_require__(103);
 	var Context = __webpack_require__(122);
-	var Action = __webpack_require__(226);
+	var Action = __webpack_require__(234);
 
 	module.exports = Queue;
 
@@ -5221,7 +5221,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var cloneDeepWith = __webpack_require__(123);
-	var Checked = __webpack_require__(181);
+	var isSet = __webpack_require__(181);
+	var isMap = __webpack_require__(185);
+	var isWeakMap = __webpack_require__(187);
+	var isWeakSet = __webpack_require__(188);
+	var Checked = __webpack_require__(189);
 
 	module.exports = Context;
 
@@ -5240,7 +5244,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function cloneCustomizer(value) {
-	    if (value instanceof Checked) {
+	    if (value instanceof Checked || isSet(value) || isMap(value) || isWeakMap(value) || isWeakSet(value)) {
 	        return value;
 	    }
 	}
@@ -6948,12 +6952,252 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 181 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var baseIsSet = __webpack_require__(182),
+	    baseUnary = __webpack_require__(183),
+	    nodeUtil = __webpack_require__(184);
+
+	/* Node.js helper references. */
+	var nodeIsSet = nodeUtil && nodeUtil.isSet;
+
+	/**
+	 * Checks if `value` is classified as a `Set` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.3.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a set, else `false`.
+	 * @example
+	 *
+	 * _.isSet(new Set);
+	 * // => true
+	 *
+	 * _.isSet(new WeakSet);
+	 * // => false
+	 */
+	var isSet = nodeIsSet ? baseUnary(nodeIsSet) : baseIsSet;
+
+	module.exports = isSet;
+
+
+/***/ },
+/* 182 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getTag = __webpack_require__(10),
+	    isObjectLike = __webpack_require__(28);
+
+	/** `Object#toString` result references. */
+	var setTag = '[object Set]';
+
+	/**
+	 * The base implementation of `_.isSet` without Node.js optimizations.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a set, else `false`.
+	 */
+	function baseIsSet(value) {
+	  return isObjectLike(value) && getTag(value) == setTag;
+	}
+
+	module.exports = baseIsSet;
+
+
+/***/ },
+/* 183 */
+/***/ function(module, exports) {
+
+	/**
+	 * The base implementation of `_.unary` without support for storing metadata.
+	 *
+	 * @private
+	 * @param {Function} func The function to cap arguments for.
+	 * @returns {Function} Returns the new capped function.
+	 */
+	function baseUnary(func) {
+	  return function(value) {
+	    return func(value);
+	  };
+	}
+
+	module.exports = baseUnary;
+
+
+/***/ },
+/* 184 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(module) {var freeGlobal = __webpack_require__(8);
+
+	/** Detect free variable `exports`. */
+	var freeExports = typeof exports == 'object' && exports && !exports.nodeType && exports;
+
+	/** Detect free variable `module`. */
+	var freeModule = freeExports && typeof module == 'object' && module && !module.nodeType && module;
+
+	/** Detect the popular CommonJS extension `module.exports`. */
+	var moduleExports = freeModule && freeModule.exports === freeExports;
+
+	/** Detect free variable `process` from Node.js. */
+	var freeProcess = moduleExports && freeGlobal.process;
+
+	/** Used to access faster Node.js helpers. */
+	var nodeUtil = (function() {
+	  try {
+	    return freeProcess && freeProcess.binding('util');
+	  } catch (e) {}
+	}());
+
+	module.exports = nodeUtil;
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(100)(module)))
+
+/***/ },
+/* 185 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseIsMap = __webpack_require__(186),
+	    baseUnary = __webpack_require__(183),
+	    nodeUtil = __webpack_require__(184);
+
+	/* Node.js helper references. */
+	var nodeIsMap = nodeUtil && nodeUtil.isMap;
+
+	/**
+	 * Checks if `value` is classified as a `Map` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.3.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a map, else `false`.
+	 * @example
+	 *
+	 * _.isMap(new Map);
+	 * // => true
+	 *
+	 * _.isMap(new WeakMap);
+	 * // => false
+	 */
+	var isMap = nodeIsMap ? baseUnary(nodeIsMap) : baseIsMap;
+
+	module.exports = isMap;
+
+
+/***/ },
+/* 186 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getTag = __webpack_require__(10),
+	    isObjectLike = __webpack_require__(28);
+
+	/** `Object#toString` result references. */
+	var mapTag = '[object Map]';
+
+	/**
+	 * The base implementation of `_.isMap` without Node.js optimizations.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a map, else `false`.
+	 */
+	function baseIsMap(value) {
+	  return isObjectLike(value) && getTag(value) == mapTag;
+	}
+
+	module.exports = baseIsMap;
+
+
+/***/ },
+/* 187 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getTag = __webpack_require__(10),
+	    isObjectLike = __webpack_require__(28);
+
+	/** `Object#toString` result references. */
+	var weakMapTag = '[object WeakMap]';
+
+	/**
+	 * Checks if `value` is classified as a `WeakMap` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.3.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a weak map, else `false`.
+	 * @example
+	 *
+	 * _.isWeakMap(new WeakMap);
+	 * // => true
+	 *
+	 * _.isWeakMap(new Map);
+	 * // => false
+	 */
+	function isWeakMap(value) {
+	  return isObjectLike(value) && getTag(value) == weakMapTag;
+	}
+
+	module.exports = isWeakMap;
+
+
+/***/ },
+/* 188 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isObjectLike = __webpack_require__(28);
+
+	/** `Object#toString` result references. */
+	var weakSetTag = '[object WeakSet]';
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/**
+	 * Used to resolve the
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+
+	/**
+	 * Checks if `value` is classified as a `WeakSet` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.3.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a weak set, else `false`.
+	 * @example
+	 *
+	 * _.isWeakSet(new WeakSet);
+	 * // => true
+	 *
+	 * _.isWeakSet(new Set);
+	 * // => false
+	 */
+	function isWeakSet(value) {
+	  return isObjectLike(value) && objectToString.call(value) == weakSetTag;
+	}
+
+	module.exports = isWeakSet;
+
+
+/***/ },
+/* 189 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 
-	var castArray = __webpack_require__(182);
-	var flattenDeep = __webpack_require__(183);
-	var Set = __webpack_require__(186);
-	var Map = __webpack_require__(219);
+	var castArray = __webpack_require__(190);
+	var flattenDeep = __webpack_require__(191);
+	var Set = __webpack_require__(194);
+	var Map = __webpack_require__(227);
 	var mopsSymbol = __webpack_require__(103);
 
 	module.exports = Checked;
@@ -7080,7 +7324,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 182 */
+/* 190 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(27);
@@ -7130,10 +7374,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 183 */
+/* 191 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFlatten = __webpack_require__(184);
+	var baseFlatten = __webpack_require__(192);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0;
@@ -7161,11 +7405,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 184 */
+/* 192 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayPush = __webpack_require__(163),
-	    isFlattenable = __webpack_require__(185);
+	    isFlattenable = __webpack_require__(193);
 
 	/**
 	 * The base implementation of `_.flatten` with support for restricting flattening.
@@ -7205,7 +7449,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 185 */
+/* 193 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(6),
@@ -7231,16 +7475,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 186 */
+/* 194 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(187)() ? Set : __webpack_require__(188);
+	module.exports = __webpack_require__(195)() ? Set : __webpack_require__(196);
 
 
 /***/ },
-/* 187 */
+/* 195 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7270,22 +7514,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 188 */
+/* 196 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var clear          = __webpack_require__(189)
-	  , eIndexOf       = __webpack_require__(190)
-	  , setPrototypeOf = __webpack_require__(196)
-	  , callable       = __webpack_require__(201)
+	var clear          = __webpack_require__(197)
+	  , eIndexOf       = __webpack_require__(198)
+	  , setPrototypeOf = __webpack_require__(204)
+	  , callable       = __webpack_require__(209)
 	  , d              = __webpack_require__(107)
-	  , ee             = __webpack_require__(202)
+	  , ee             = __webpack_require__(210)
 	  , Symbol         = __webpack_require__(104)
-	  , iterator       = __webpack_require__(203)
-	  , forOf          = __webpack_require__(207)
-	  , Iterator       = __webpack_require__(217)
-	  , isNative       = __webpack_require__(218)
+	  , iterator       = __webpack_require__(211)
+	  , forOf          = __webpack_require__(215)
+	  , Iterator       = __webpack_require__(225)
+	  , isNative       = __webpack_require__(226)
 
 	  , call = Function.prototype.call
 	  , defineProperty = Object.defineProperty, getPrototypeOf = Object.getPrototypeOf
@@ -7356,7 +7600,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 189 */
+/* 197 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Inspired by Google Closure:
@@ -7374,12 +7618,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 190 */
+/* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toPosInt = __webpack_require__(191)
+	var toPosInt = __webpack_require__(199)
 	  , value    = __webpack_require__(114)
 
 	  , indexOf = Array.prototype.indexOf
@@ -7409,12 +7653,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 191 */
+/* 199 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toInteger = __webpack_require__(192)
+	var toInteger = __webpack_require__(200)
 
 	  , max = Math.max;
 
@@ -7422,12 +7666,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 192 */
+/* 200 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var sign = __webpack_require__(193)
+	var sign = __webpack_require__(201)
 
 	  , abs = Math.abs, floor = Math.floor;
 
@@ -7440,18 +7684,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 193 */
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(194)()
+	module.exports = __webpack_require__(202)()
 		? Math.sign
-		: __webpack_require__(195);
+		: __webpack_require__(203);
 
 
 /***/ },
-/* 194 */
+/* 202 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7464,7 +7708,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 195 */
+/* 203 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7477,18 +7721,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 196 */
+/* 204 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(197)()
+	module.exports = __webpack_require__(205)()
 		? Object.setPrototypeOf
-		: __webpack_require__(198);
+		: __webpack_require__(206);
 
 
 /***/ },
-/* 197 */
+/* 205 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7505,7 +7749,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 198 */
+/* 206 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Big thanks to @WebReflection for sorting this out
@@ -7513,7 +7757,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var isObject      = __webpack_require__(199)
+	var isObject      = __webpack_require__(207)
 	  , value         = __webpack_require__(114)
 
 	  , isPrototypeOf = Object.prototype.isPrototypeOf
@@ -7580,11 +7824,11 @@ return /******/ (function(modules) { // webpackBootstrap
 		return false;
 	}())));
 
-	__webpack_require__(200);
+	__webpack_require__(208);
 
 
 /***/ },
-/* 199 */
+/* 207 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7597,7 +7841,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 200 */
+/* 208 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Workaround for http://code.google.com/p/v8/issues/detail?id=2804
@@ -7606,8 +7850,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var create = Object.create, shim;
 
-	if (!__webpack_require__(197)()) {
-		shim = __webpack_require__(198);
+	if (!__webpack_require__(205)()) {
+		shim = __webpack_require__(206);
 	}
 
 	module.exports = (function () {
@@ -7639,7 +7883,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 201 */
+/* 209 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7651,13 +7895,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 202 */
+/* 210 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var d        = __webpack_require__(107)
-	  , callable = __webpack_require__(201)
+	  , callable = __webpack_require__(209)
 
 	  , apply = Function.prototype.apply, call = Function.prototype.call
 	  , create = Object.create, defineProperty = Object.defineProperty
@@ -7789,12 +8033,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 203 */
+/* 211 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isIterable = __webpack_require__(204);
+	var isIterable = __webpack_require__(212);
 
 	module.exports = function (value) {
 		if (!isIterable(value)) throw new TypeError(value + " is not iterable");
@@ -7803,13 +8047,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 204 */
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isArguments    = __webpack_require__(205)
-	  , isString       = __webpack_require__(206)
+	var isArguments    = __webpack_require__(213)
+	  , isString       = __webpack_require__(214)
 	  , iteratorSymbol = __webpack_require__(104).iterator
 
 	  , isArray = Array.isArray;
@@ -7824,7 +8068,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 205 */
+/* 213 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7837,7 +8081,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 206 */
+/* 214 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7853,15 +8097,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 207 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isArguments = __webpack_require__(205)
-	  , callable    = __webpack_require__(201)
-	  , isString    = __webpack_require__(206)
-	  , get         = __webpack_require__(208)
+	var isArguments = __webpack_require__(213)
+	  , callable    = __webpack_require__(209)
+	  , isString    = __webpack_require__(214)
+	  , get         = __webpack_require__(216)
 
 	  , isArray = Array.isArray, call = Function.prototype.call
 	  , some = Array.prototype.some;
@@ -7905,16 +8149,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 208 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isArguments    = __webpack_require__(205)
-	  , isString       = __webpack_require__(206)
-	  , ArrayIterator  = __webpack_require__(209)
-	  , StringIterator = __webpack_require__(216)
-	  , iterable       = __webpack_require__(203)
+	var isArguments    = __webpack_require__(213)
+	  , isString       = __webpack_require__(214)
+	  , ArrayIterator  = __webpack_require__(217)
+	  , StringIterator = __webpack_require__(224)
+	  , iterable       = __webpack_require__(211)
 	  , iteratorSymbol = __webpack_require__(104).iterator;
 
 	module.exports = function (obj) {
@@ -7926,15 +8170,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 209 */
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var setPrototypeOf = __webpack_require__(196)
+	var setPrototypeOf = __webpack_require__(204)
 	  , contains       = __webpack_require__(117)
 	  , d              = __webpack_require__(107)
-	  , Iterator       = __webpack_require__(210)
+	  , Iterator       = __webpack_require__(218)
 
 	  , defineProperty = Object.defineProperty
 	  , ArrayIterator;
@@ -7962,17 +8206,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 210 */
+/* 218 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var clear    = __webpack_require__(189)
+	var clear    = __webpack_require__(197)
 	  , assign   = __webpack_require__(108)
-	  , callable = __webpack_require__(201)
+	  , callable = __webpack_require__(209)
 	  , value    = __webpack_require__(114)
 	  , d        = __webpack_require__(107)
-	  , autoBind = __webpack_require__(211)
+	  , autoBind = __webpack_require__(219)
 	  , Symbol   = __webpack_require__(104)
 
 	  , defineProperty = Object.defineProperty
@@ -8058,14 +8302,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 211 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var copy       = __webpack_require__(212)
-	  , map        = __webpack_require__(213)
-	  , callable   = __webpack_require__(201)
+	var copy       = __webpack_require__(220)
+	  , map        = __webpack_require__(221)
+	  , callable   = __webpack_require__(209)
 	  , validValue = __webpack_require__(114)
 
 	  , bind = Function.prototype.bind, defineProperty = Object.defineProperty
@@ -8095,7 +8339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 212 */
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -8111,13 +8355,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 213 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var callable = __webpack_require__(201)
-	  , forEach  = __webpack_require__(214)
+	var callable = __webpack_require__(209)
+	  , forEach  = __webpack_require__(222)
 
 	  , call = Function.prototype.call;
 
@@ -8132,16 +8376,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 214 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(215)('forEach');
+	module.exports = __webpack_require__(223)('forEach');
 
 
 /***/ },
-/* 215 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Internal method, used by iteration functions.
@@ -8150,7 +8394,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var callable = __webpack_require__(201)
+	var callable = __webpack_require__(209)
 	  , value    = __webpack_require__(114)
 
 	  , bind = Function.prototype.bind, call = Function.prototype.call, keys = Object.keys
@@ -8176,7 +8420,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 216 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Thanks @mathiasbynens
@@ -8184,9 +8428,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var setPrototypeOf = __webpack_require__(196)
+	var setPrototypeOf = __webpack_require__(204)
 	  , d              = __webpack_require__(107)
-	  , Iterator       = __webpack_require__(210)
+	  , Iterator       = __webpack_require__(218)
 
 	  , defineProperty = Object.defineProperty
 	  , StringIterator;
@@ -8219,15 +8463,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 217 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var setPrototypeOf    = __webpack_require__(196)
+	var setPrototypeOf    = __webpack_require__(204)
 	  , contains          = __webpack_require__(117)
 	  , d                 = __webpack_require__(107)
-	  , Iterator          = __webpack_require__(210)
+	  , Iterator          = __webpack_require__(218)
 	  , toStringTagSymbol = __webpack_require__(104).toStringTag
 
 	  , defineProperty = Object.defineProperty
@@ -8255,7 +8499,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 218 */
+/* 226 */
 /***/ function(module, exports) {
 
 	// Exports true if environment provides native `Set` implementation,
@@ -8270,16 +8514,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 219 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(220)() ? Map : __webpack_require__(221);
+	module.exports = __webpack_require__(228)() ? Map : __webpack_require__(229);
 
 
 /***/ },
-/* 220 */
+/* 228 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -8317,23 +8561,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 221 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var clear          = __webpack_require__(189)
-	  , eIndexOf       = __webpack_require__(190)
-	  , setPrototypeOf = __webpack_require__(196)
-	  , callable       = __webpack_require__(201)
+	var clear          = __webpack_require__(197)
+	  , eIndexOf       = __webpack_require__(198)
+	  , setPrototypeOf = __webpack_require__(204)
+	  , callable       = __webpack_require__(209)
 	  , validValue     = __webpack_require__(114)
 	  , d              = __webpack_require__(107)
-	  , ee             = __webpack_require__(202)
+	  , ee             = __webpack_require__(210)
 	  , Symbol         = __webpack_require__(104)
-	  , iterator       = __webpack_require__(203)
-	  , forOf          = __webpack_require__(207)
-	  , Iterator       = __webpack_require__(222)
-	  , isNative       = __webpack_require__(225)
+	  , iterator       = __webpack_require__(211)
+	  , forOf          = __webpack_require__(215)
+	  , Iterator       = __webpack_require__(230)
+	  , isNative       = __webpack_require__(233)
 
 	  , call = Function.prototype.call
 	  , defineProperties = Object.defineProperties, getPrototypeOf = Object.getPrototypeOf
@@ -8427,16 +8671,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 222 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var setPrototypeOf    = __webpack_require__(196)
+	var setPrototypeOf    = __webpack_require__(204)
 	  , d                 = __webpack_require__(107)
-	  , Iterator          = __webpack_require__(210)
+	  , Iterator          = __webpack_require__(218)
 	  , toStringTagSymbol = __webpack_require__(104).toStringTag
-	  , kinds             = __webpack_require__(223)
+	  , kinds             = __webpack_require__(231)
 
 	  , defineProperties = Object.defineProperties
 	  , unBind = Iterator.prototype._unBind
@@ -8471,17 +8715,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 223 */
+/* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(224)('key',
+	module.exports = __webpack_require__(232)('key',
 		'value', 'key+value');
 
 
 /***/ },
-/* 224 */
+/* 232 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -8496,7 +8740,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 225 */
+/* 233 */
 /***/ function(module, exports) {
 
 	// Exports true if environment provides native `Map` implementation,
@@ -8511,14 +8755,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 226 */
+/* 234 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isError = __webpack_require__(227);
+	var isError = __webpack_require__(235);
 	var isObject = __webpack_require__(3);
-	var wrap = __webpack_require__(228);
+	var wrap = __webpack_require__(236);
 	var Promise = __webpack_require__(98).Promise;
 	var mopsSymbol = __webpack_require__(103);
 
@@ -8581,7 +8825,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 227 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObjectLike = __webpack_require__(28);
@@ -8629,11 +8873,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 228 */
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var identity = __webpack_require__(54),
-	    partial = __webpack_require__(229);
+	    partial = __webpack_require__(237);
 
 	/**
 	 * Creates a function that provides `value` to `wrapper` as its first
@@ -8666,7 +8910,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 229 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseRest = __webpack_require__(50),
@@ -8722,12 +8966,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 230 */
+/* 238 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toString = __webpack_require__(231);
+	var toString = __webpack_require__(239);
 
 	module.exports = MopsError;
 
@@ -8750,10 +8994,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 /***/ },
-/* 231 */
+/* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToString = __webpack_require__(232);
+	var baseToString = __webpack_require__(240);
 
 	/**
 	 * Converts `value` to a string. An empty string is returned for `null`
@@ -8784,7 +9028,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 232 */
+/* 240 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(6),
