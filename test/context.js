@@ -5,16 +5,24 @@ describe('Context', function () {
 
     describe('#constructor()', function () {
         it('контекст фризится', function () {
-            let operation = new mops.Context()
+            let context = new mops.Context()
 
-            assert.isOk(Object.isFrozen(operation));
+            assert.isOk(Object.isFrozen(context));
         });
 
         it('данные клонируются', function () {
             let data = { test: true };
-            let operation = new mops.Context(data)
+            let context = new mops.Context(data)
 
-            assert.notStrictEqual(operation.data, data);
+            assert.notStrictEqual(context.data, data);
+        });
+
+        it('объект mops.Checked не клонируется', function () {
+            let obj = { obj: 1 };
+            let checked = new mops.Checked([ obj ]);
+            let context = new mops.Context(checked);
+
+            assert.isOk(context.data.has(obj));
         });
     });
 });

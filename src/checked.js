@@ -1,5 +1,5 @@
 const castArray = require('lodash/castArray');
-const flattenDeep = require('lodash/flattenDeep');
+const toArray = require('lodash/toArray');
 const Set = require('es6-set');
 const Map = require('es6-map');
 const mopsSymbol = require('./symbol');
@@ -8,10 +8,11 @@ module.exports = Checked;
 
 /**
  * @class
+ * @param {array} [checked]
  */
-function Checked() {
+function Checked(checked) {
     Object.defineProperty(this, mopsSymbol.CHECKED, {
-        value: new Set(flattenDeep(arguments))
+        value: new Set(Array.isArray(checked) ? checked : [])
     });
 }
 
@@ -49,17 +50,37 @@ Checked.prototype.size = function () {
 };
 
 /**
- * @returns {Set}
+ * @returns {array}
  */
-Checked.prototype.getObjects = function () {
-    return new Set(this[ mopsSymbol.CHECKED ]);
+Checked.prototype.toArray = function () {
+    return toArray(this[ mopsSymbol.CHECKED ]);
 };
 
 /**
  * @param {function} getItemGroups
- * @returns {Set}
+ * @returns {array} [[ group1, [...] ], [ group2, [...] ], [ group3, [...] ]]
  */
-Checked.prototype.getGroupsObjects = function (getItemGroups) {
+Checked.prototype.getGroups = function (getItemGroups) {
+    const groups = new Map();
+
+    this[ mopsSymbol.CHECKED ].forEach(function checkedIterator(item) {
+        const itemGroups = castArray(getItemGroups(item) || []);
+
+        if (itemGroups.length) {
+            itemGroups
+                .map(getSgroup, groups)
+                .forEach(addInSgroup, item);
+        }
+    });
+
+    return toArray(groups);
+};
+
+/**
+ * @param {function} getItemGroups
+ * @returns {Checked}
+ */
+Checked.prototype.getCheckedGroups = function (getItemGroups) {
     const checked = new Set(this[ mopsSymbol.CHECKED ]);
     const groups = new Map();
 
@@ -88,27 +109,8 @@ Checked.prototype.getGroupsObjects = function (getItemGroups) {
     });
 
     groups.clear();
-    return checked;
-};
 
-/**
- * @param {function} getItemGroups
- * @returns {Map}
- */
-Checked.prototype.getGroups = function (getItemGroups) {
-    const groups = new Map();
-
-    this[ mopsSymbol.CHECKED ].forEach(function checkedIterator(item) {
-        const itemGroups = castArray(getItemGroups(item) || []);
-
-        if (itemGroups.length) {
-            itemGroups
-                .map(getSgroup, groups)
-                .forEach(addInSgroup, item);
-        }
-    });
-
-    return groups;
+    return new Checked(toArray(checked));
 };
 
 function getSgroup(group) {

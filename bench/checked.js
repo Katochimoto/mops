@@ -15,29 +15,29 @@
     });
 
     suite
-    .add('mops.Checked#getGroupsObjects с произвольными группами', function() {
+    .add('mops.Checked#getCheckedGroups с произвольными группами', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupsObjects(getGroups);
+        checked.getCheckedGroups(getGroups);
     })
-    .add('mops.Checked#getGroupsObjects с произвольным количеством (от 0 до 5) произвольных групп', function() {
+    .add('mops.Checked#getCheckedGroups с произвольным количеством (от 0 до 5) произвольных групп', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupsObjects(getGroupsRandon);
+        checked.getCheckedGroups(getGroupsRandon);
     })
-    .add('mops.Checked#getGroupsObjects без групп', function() {
+    .add('mops.Checked#getCheckedGroups без групп', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupsObjects(getGroupsEmpty);
+        checked.getCheckedGroups(getGroupsEmpty);
     })
-    .add('mops.Checked#getGroupsObjects с исходным объектом в виде группы', function() {
+    .add('mops.Checked#getCheckedGroups с исходным объектом в виде группы', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupsObjects(getGroupsSelf);
+        checked.getCheckedGroups(getGroupsSelf);
     })
-    .add('mops.Checked#getGroupsObjects с двумя постоянно разными группами', function() {
+    .add('mops.Checked#getCheckedGroups с двумя постоянно разными группами', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupsObjects(getGroupsOther);
+        checked.getCheckedGroups(getGroupsOther);
     })
-    .add('mops.Checked#getGroupsObjects с одной общей группой', function() {
+    .add('mops.Checked#getCheckedGroups с одной общей группой', function() {
         var checked = new mops.Checked(objects);
-        checked.getGroupsObjects(getGroupsOne);
+        checked.getCheckedGroups(getGroupsOne);
     })
 
     .add('mops.Checked#getGroups с произвольными группами', function() {
@@ -65,14 +65,16 @@
         checked.getGroups(getGroupsOne);
     })
 
-    .add('mops.Checked#getObjects', function() {
+    .add('mops.Checked#toArray', function() {
         var checked = new mops.Checked(objects);
-        checked.getObjects();
+        checked.toArray();
     })
+
     .add('mops.Checked#check', function() {
         var checked = new mops.Checked();
         checked.check({});
     })
+
     .add('mops.Checked#uncheck', function() {
         var checked = new mops.Checked();
         checked.uncheck({});
