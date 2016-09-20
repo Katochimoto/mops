@@ -1,5 +1,6 @@
 const cloneDeepWith = require('lodash/cloneDeepWith');
 const Checked = require('./checked');
+const Operation = require('./operation');
 
 module.exports = Context;
 
@@ -18,7 +19,9 @@ function Context(data) {
 }
 
 function cloneCustomizer(value) {
-    if (value instanceof Checked) {
+    if (value instanceof Checked ||
+        value instanceof Operation) {
+
         return value;
     }
 }

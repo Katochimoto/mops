@@ -38,7 +38,7 @@ Checked.prototype.has = function (obj) {
     return this[ mopsSymbol.CHECKED ].has(obj);
 };
 
-Checked.prototype.reset = function () {
+Checked.prototype.clear = function () {
     this[ mopsSymbol.CHECKED ].clear();
 };
 
@@ -110,7 +110,7 @@ Checked.prototype.getCheckedGroups = function (getItemGroups) {
 
     groups.clear();
 
-    return new Checked(toArray(checked));
+    return new this.constructor(toArray(checked));
 };
 
 function getSgroup(group) {

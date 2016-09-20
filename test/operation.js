@@ -1,8 +1,63 @@
 const assert = require('chai').assert;
 const mops = require('../src/mops');
 
-describe('Checked', function () {
+describe('Operation', function () {
 
+    describe('#set', function () {
+        it('должен добавить действие для объекта', function () {
+            let object = {};
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.set(object, action);
+
+            assert.deepEqual(operations.toArray(), [[ object, [[ action, 1 ]] ]]);
+        });
+
+        it('повторное добавление действия инкрементирует счетчик', function () {
+            let object = {};
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.set(object, action);
+            operations.set(object, action);
+
+            assert.deepEqual(operations.toArray(), [[ object, [[ action, 2 ]] ]]);
+        });
+    });
+
+    describe('#delete', function () {
+        it('должно декрементировать счетчик', function () {
+            let object = {};
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.set(object, action);
+            operations.set(object, action);
+            operations.set(object, action);
+
+            operations.delete(object, action);
+            operations.delete(object, action);
+
+            assert.deepEqual(operations.toArray(), [[ object, [[ action, 1 ]] ]]);
+        });
+
+        it('сброс счетчика вызовов убирает действие', function () {
+            let object = {};
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.set(object, action);
+            operations.set(object, action);
+
+            operations.delete(object, action);
+            operations.delete(object, action);
+
+            assert.deepEqual(operations.toArray(), [[ object, [] ]]);
+        });
+    });
+
+    /*
     describe('#clear()', function () {
         it('должен удалить все элементы из списка', function () {
             let o1 = {};
@@ -181,4 +236,5 @@ describe('Checked', function () {
             assert.instanceOf(items, mops.Checked, '#getCheckedGroups() is an instance of mops.Checked');
         });
     });
+    */
 });

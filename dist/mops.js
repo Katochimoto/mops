@@ -57,10 +57,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	exports.Queue = __webpack_require__(1);
-	exports.Action = __webpack_require__(222);
+	exports.Action = __webpack_require__(223);
 	exports.Context = __webpack_require__(120);
-	exports.Error = __webpack_require__(226);
+	exports.Error = __webpack_require__(227);
 	exports.Checked = __webpack_require__(180);
+	exports.Operation = __webpack_require__(222);
 
 /***/ },
 /* 1 */
@@ -78,7 +79,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Promise = __webpack_require__(98).Promise;
 	var mopsSymbol = __webpack_require__(101);
 	var Context = __webpack_require__(120);
-	var Action = __webpack_require__(222);
+	var Action = __webpack_require__(223);
 
 	module.exports = Queue;
 
@@ -4954,6 +4955,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.QUEUE = _Symbol('mops-queue');
 	exports.SUPER = _Symbol('mops-action-super');
 	exports.CHECKED = _Symbol('mops-checked');
+	exports.OPERATION = _Symbol('mops-operation');
 
 /***/ },
 /* 102 */
@@ -5393,6 +5395,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var cloneDeepWith = __webpack_require__(121);
 	var Checked = __webpack_require__(180);
+	var Operation = __webpack_require__(222);
 
 	module.exports = Context;
 
@@ -5411,7 +5414,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function cloneCustomizer(value) {
-	    if (value instanceof Checked) {
+	    if (value instanceof Checked || value instanceof Operation) {
+
 	        return value;
 	    }
 	}
@@ -7177,7 +7181,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this[mopsSymbol.CHECKED].has(obj);
 	};
 
-	Checked.prototype.reset = function () {
+	Checked.prototype.clear = function () {
 	    this[mopsSymbol.CHECKED].clear();
 	};
 
@@ -7244,7 +7248,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    groups.clear();
 
-	    return new Checked(toArray(checked));
+	    return new this.constructor(toArray(checked));
 	};
 
 	function getSgroup(group) {
@@ -8606,9 +8610,123 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var isError = __webpack_require__(223);
+	var toArray = __webpack_require__(5);
+	var Map = __webpack_require__(215);
+	var mopsSymbol = __webpack_require__(101);
+
+	module.exports = Operation;
+
+	/**
+	 * @class
+	 */
+	function Operation() {
+	    Object.defineProperty(this, mopsSymbol.OPERATION, {
+	        value: new Map()
+	    });
+	}
+
+	Operation.prototype.set = function (object, action) {
+	    var objects = this[mopsSymbol.OPERATION];
+	    var actions = objects.get(object);
+
+	    if (actions) {
+	        var count = actions.get(action) || 0;
+	        actions.set(action, ++count);
+	    } else {
+	        objects.set(object, new Map([[action, 1]]));
+	    }
+	};
+
+	Operation.prototype.delete = function (object, action) {
+	    var actions = this[mopsSymbol.OPERATION].get(object);
+
+	    if (!actions) {
+	        return;
+	    }
+
+	    var count = actions.get(action) || 0;
+	    count--;
+
+	    if (count > 0) {
+	        actions.set(action, count);
+	    } else {
+	        actions.delete(action);
+	    }
+	};
+
+	Operation.prototype.has = function (object, action) {
+	    var objects = this[mopsSymbol.OPERATION];
+
+	    if (action) {
+	        var actions = objects.get(object);
+	        return Boolean(actions && actions.has(action));
+	    } else {
+	        return objects.has(object);
+	    }
+	};
+
+	Operation.prototype.clear = function (object, action) {
+	    var objects = this[mopsSymbol.OPERATION];
+
+	    if (action) {
+	        var actions = objects.get(object);
+
+	        if (actions) {
+	            actions.delete(action);
+	        }
+	    } else if (object) {
+	        objects.delete(object);
+	    } else {
+	        objects.clear();
+	    }
+	};
+
+	/**
+	 * @returns {number}
+	 */
+	Operation.prototype.size = function () {
+	    return this[mopsSymbol.OPERATION].size;
+	};
+
+	/**
+	 * @returns {array}
+	 */
+	Operation.prototype.toArray = function () {
+	    var objects = [];
+
+	    this[mopsSymbol.OPERATION].forEach(function operationIterator(actions, object) {
+	        objects.push([object, toArray(actions)]);
+	    });
+
+	    return objects;
+	};
+
+	/**
+	 * @param {function} action
+	 * @returns {array} [[ object1, count1 ], [ object2, count2 ], [ object3, count3 ], ...]
+	 */
+	Operation.prototype.getObjectsByAction = function (action) {
+	    var objects = [];
+
+	    this[mopsSymbol.OPERATION].forEach(function operationIterator(actions, object) {
+	        var count = actions.get(action);
+	        if (count > 0) {
+	            objects.push([object, count]);
+	        }
+	    });
+
+	    return objects;
+	};
+
+/***/ },
+/* 223 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var isError = __webpack_require__(224);
 	var isObject = __webpack_require__(3);
-	var wrap = __webpack_require__(224);
+	var wrap = __webpack_require__(225);
 	var Promise = __webpack_require__(98).Promise;
 	var mopsSymbol = __webpack_require__(101);
 
@@ -8671,7 +8789,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 223 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObjectLike = __webpack_require__(28);
@@ -8719,11 +8837,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 224 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var identity = __webpack_require__(54),
-	    partial = __webpack_require__(225);
+	    partial = __webpack_require__(226);
 
 	/**
 	 * Creates a function that provides `value` to `wrapper` as its first
@@ -8756,7 +8874,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 225 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseRest = __webpack_require__(50),
@@ -8812,12 +8930,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 226 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toString = __webpack_require__(227);
+	var toString = __webpack_require__(228);
 
 	module.exports = MopsError;
 
@@ -8840,10 +8958,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 /***/ },
-/* 227 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToString = __webpack_require__(228);
+	var baseToString = __webpack_require__(229);
 
 	/**
 	 * Converts `value` to a string. An empty string is returned for `null`
@@ -8874,7 +8992,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 228 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(6),
