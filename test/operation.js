@@ -1,7 +1,7 @@
 const assert = require('chai').assert;
 const mops = require('../src/mops');
 
-describe('Operation', function () {
+xdescribe('Operation', function () {
 
     describe('#set', function () {
         it('должен добавить действие для объекта', function () {
