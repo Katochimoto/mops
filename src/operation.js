@@ -1,11 +1,8 @@
-const spread = require('lodash/spread');
-const partial = require('lodash/partial');
-const flatten = require('lodash/flatten');
 const mopsSymbol = require('./symbol');
 
 module.exports = Operation;
 
-const wrapper = spread(partial);
+const slice = Array.prototype.slice;
 
 /**
  * @class
@@ -44,13 +41,24 @@ Operation.prototype.filter = function (action) {
 };
 
 function iterator(array) {
-    var nextIndex = 0;
+    const len = array.length;
+    let nextIndex = 0;
 
     return {
         next: function () {
-            return nextIndex < array.length ?
-                { value: wrapper(flatten(array[ nextIndex++ ])), done: false } :
-                { done: true };
+            if (nextIndex < len) {
+                const item = array[ nextIndex++ ];
+
+                return {
+                    value: function () {
+                        return item[0].apply(this, item[1].concat(slice.call(arguments)));
+                    },
+                    done: false
+                };
+
+            } else {
+                return { done: true };
+            }
         }
     };
 }

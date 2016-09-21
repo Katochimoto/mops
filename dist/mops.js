@@ -57,9 +57,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	exports.Queue = __webpack_require__(1);
-	exports.Action = __webpack_require__(230);
+	exports.Action = __webpack_require__(223);
 	exports.Context = __webpack_require__(120);
-	exports.Error = __webpack_require__(233);
+	exports.Error = __webpack_require__(227);
 	exports.Checked = __webpack_require__(180);
 	exports.Operation = __webpack_require__(222);
 
@@ -79,7 +79,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Promise = __webpack_require__(98).Promise;
 	var mopsSymbol = __webpack_require__(101);
 	var Context = __webpack_require__(120);
-	var Action = __webpack_require__(230);
+	var Action = __webpack_require__(223);
 
 	module.exports = Queue;
 
@@ -8611,14 +8611,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var spread = __webpack_require__(223);
-	var partial = __webpack_require__(226);
-	var flatten = __webpack_require__(227);
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 	var mopsSymbol = __webpack_require__(101);
 
 	module.exports = Operation;
 
-	var wrapper = spread(partial);
+	var slice = Array.prototype.slice;
 
 	/**
 	 * @class
@@ -8660,11 +8659,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	function iterator(array) {
+	    var len = array.length;
 	    var nextIndex = 0;
 
 	    return {
 	        next: function next() {
-	            return nextIndex < array.length ? { value: wrapper(flatten(array[nextIndex++])), done: false } : { done: true };
+	            if (nextIndex < len) {
+	                var _ret = function () {
+	                    var item = array[nextIndex++];
+
+	                    return {
+	                        v: {
+	                            value: function value() {
+	                                return item[0].apply(this, item[1].concat(slice.call(arguments)));
+	                            },
+	                            done: false
+	                        }
+	                    };
+	                }();
+
+	                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+	            } else {
+	                return { done: true };
+	            }
 	        }
 	    };
 	}
@@ -8673,295 +8690,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var apply = __webpack_require__(51),
-	    arrayPush = __webpack_require__(161),
-	    baseRest = __webpack_require__(50),
-	    castSlice = __webpack_require__(224),
-	    toInteger = __webpack_require__(93);
-
-	/** Used as the `TypeError` message for "Functions" methods. */
-	var FUNC_ERROR_TEXT = 'Expected a function';
-
-	/* Built-in method references for those with the same name as other `lodash` methods. */
-	var nativeMax = Math.max;
-
-	/**
-	 * Creates a function that invokes `func` with the `this` binding of the
-	 * create function and an array of arguments much like
-	 * [`Function#apply`](http://www.ecma-international.org/ecma-262/7.0/#sec-function.prototype.apply).
-	 *
-	 * **Note:** This method is based on the
-	 * [spread operator](https://mdn.io/spread_operator).
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 3.2.0
-	 * @category Function
-	 * @param {Function} func The function to spread arguments over.
-	 * @param {number} [start=0] The start position of the spread.
-	 * @returns {Function} Returns the new function.
-	 * @example
-	 *
-	 * var say = _.spread(function(who, what) {
-	 *   return who + ' says ' + what;
-	 * });
-	 *
-	 * say(['fred', 'hello']);
-	 * // => 'fred says hello'
-	 *
-	 * var numbers = Promise.all([
-	 *   Promise.resolve(40),
-	 *   Promise.resolve(36)
-	 * ]);
-	 *
-	 * numbers.then(_.spread(function(x, y) {
-	 *   return x + y;
-	 * }));
-	 * // => a Promise of 76
-	 */
-	function spread(func, start) {
-	  if (typeof func != 'function') {
-	    throw new TypeError(FUNC_ERROR_TEXT);
-	  }
-	  start = start === undefined ? 0 : nativeMax(toInteger(start), 0);
-	  return baseRest(function(args) {
-	    var array = args[start],
-	        otherArgs = castSlice(args, 0, start);
-
-	    if (array) {
-	      arrayPush(otherArgs, array);
-	    }
-	    return apply(func, this, otherArgs);
-	  });
-	}
-
-	module.exports = spread;
-
-
-/***/ },
-/* 224 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var baseSlice = __webpack_require__(225);
-
-	/**
-	 * Casts `array` to a slice if it's needed.
-	 *
-	 * @private
-	 * @param {Array} array The array to inspect.
-	 * @param {number} start The start position.
-	 * @param {number} [end=array.length] The end position.
-	 * @returns {Array} Returns the cast slice.
-	 */
-	function castSlice(array, start, end) {
-	  var length = array.length;
-	  end = end === undefined ? length : end;
-	  return (!start && end >= length) ? array : baseSlice(array, start, end);
-	}
-
-	module.exports = castSlice;
-
-
-/***/ },
-/* 225 */
-/***/ function(module, exports) {
-
-	/**
-	 * The base implementation of `_.slice` without an iteratee call guard.
-	 *
-	 * @private
-	 * @param {Array} array The array to slice.
-	 * @param {number} [start=0] The start position.
-	 * @param {number} [end=array.length] The end position.
-	 * @returns {Array} Returns the slice of `array`.
-	 */
-	function baseSlice(array, start, end) {
-	  var index = -1,
-	      length = array.length;
-
-	  if (start < 0) {
-	    start = -start > length ? 0 : (length + start);
-	  }
-	  end = end > length ? length : end;
-	  if (end < 0) {
-	    end += length;
-	  }
-	  length = start > end ? 0 : ((end - start) >>> 0);
-	  start >>>= 0;
-
-	  var result = Array(length);
-	  while (++index < length) {
-	    result[index] = array[index + start];
-	  }
-	  return result;
-	}
-
-	module.exports = baseSlice;
-
-
-/***/ },
-/* 226 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var baseRest = __webpack_require__(50),
-	    createWrap = __webpack_require__(52),
-	    getHolder = __webpack_require__(88),
-	    replaceHolders = __webpack_require__(90);
-
-	/** Used to compose bitmasks for function metadata. */
-	var PARTIAL_FLAG = 32;
-
-	/**
-	 * Creates a function that invokes `func` with `partials` prepended to the
-	 * arguments it receives. This method is like `_.bind` except it does **not**
-	 * alter the `this` binding.
-	 *
-	 * The `_.partial.placeholder` value, which defaults to `_` in monolithic
-	 * builds, may be used as a placeholder for partially applied arguments.
-	 *
-	 * **Note:** This method doesn't set the "length" property of partially
-	 * applied functions.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 0.2.0
-	 * @category Function
-	 * @param {Function} func The function to partially apply arguments to.
-	 * @param {...*} [partials] The arguments to be partially applied.
-	 * @returns {Function} Returns the new partially applied function.
-	 * @example
-	 *
-	 * function greet(greeting, name) {
-	 *   return greeting + ' ' + name;
-	 * }
-	 *
-	 * var sayHelloTo = _.partial(greet, 'hello');
-	 * sayHelloTo('fred');
-	 * // => 'hello fred'
-	 *
-	 * // Partially applied with placeholders.
-	 * var greetFred = _.partial(greet, _, 'fred');
-	 * greetFred('hi');
-	 * // => 'hi fred'
-	 */
-	var partial = baseRest(function(func, partials) {
-	  var holders = replaceHolders(partials, getHolder(partial));
-	  return createWrap(func, PARTIAL_FLAG, undefined, partials, holders);
-	});
-
-	// Assign default placeholders.
-	partial.placeholder = {};
-
-	module.exports = partial;
-
-
-/***/ },
-/* 227 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var baseFlatten = __webpack_require__(228);
-
-	/**
-	 * Flattens `array` a single level deep.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 0.1.0
-	 * @category Array
-	 * @param {Array} array The array to flatten.
-	 * @returns {Array} Returns the new flattened array.
-	 * @example
-	 *
-	 * _.flatten([1, [2, [3, [4]], 5]]);
-	 * // => [1, 2, [3, [4]], 5]
-	 */
-	function flatten(array) {
-	  var length = array ? array.length : 0;
-	  return length ? baseFlatten(array, 1) : [];
-	}
-
-	module.exports = flatten;
-
-
-/***/ },
-/* 228 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var arrayPush = __webpack_require__(161),
-	    isFlattenable = __webpack_require__(229);
-
-	/**
-	 * The base implementation of `_.flatten` with support for restricting flattening.
-	 *
-	 * @private
-	 * @param {Array} array The array to flatten.
-	 * @param {number} depth The maximum recursion depth.
-	 * @param {boolean} [predicate=isFlattenable] The function invoked per iteration.
-	 * @param {boolean} [isStrict] Restrict to values that pass `predicate` checks.
-	 * @param {Array} [result=[]] The initial result value.
-	 * @returns {Array} Returns the new flattened array.
-	 */
-	function baseFlatten(array, depth, predicate, isStrict, result) {
-	  var index = -1,
-	      length = array.length;
-
-	  predicate || (predicate = isFlattenable);
-	  result || (result = []);
-
-	  while (++index < length) {
-	    var value = array[index];
-	    if (depth > 0 && predicate(value)) {
-	      if (depth > 1) {
-	        // Recursively flatten arrays (susceptible to call stack limits).
-	        baseFlatten(value, depth - 1, predicate, isStrict, result);
-	      } else {
-	        arrayPush(result, value);
-	      }
-	    } else if (!isStrict) {
-	      result[result.length] = value;
-	    }
-	  }
-	  return result;
-	}
-
-	module.exports = baseFlatten;
-
-
-/***/ },
-/* 229 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Symbol = __webpack_require__(6),
-	    isArguments = __webpack_require__(42),
-	    isArray = __webpack_require__(27);
-
-	/** Built-in value references. */
-	var spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
-
-	/**
-	 * Checks if `value` is a flattenable `arguments` object or array.
-	 *
-	 * @private
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is flattenable, else `false`.
-	 */
-	function isFlattenable(value) {
-	  return isArray(value) || isArguments(value) ||
-	    !!(spreadableSymbol && value && value[spreadableSymbol]);
-	}
-
-	module.exports = isFlattenable;
-
-
-/***/ },
-/* 230 */
-/***/ function(module, exports, __webpack_require__) {
-
 	'use strict';
 
-	var isError = __webpack_require__(231);
+	var isError = __webpack_require__(224);
 	var isObject = __webpack_require__(3);
-	var wrap = __webpack_require__(232);
+	var wrap = __webpack_require__(225);
 	var Promise = __webpack_require__(98).Promise;
 	var mopsSymbol = __webpack_require__(101);
 
@@ -9024,7 +8757,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 231 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObjectLike = __webpack_require__(28);
@@ -9072,7 +8805,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 232 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var identity = __webpack_require__(54),
@@ -9109,12 +8842,68 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 233 */
+/* 226 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseRest = __webpack_require__(50),
+	    createWrap = __webpack_require__(52),
+	    getHolder = __webpack_require__(88),
+	    replaceHolders = __webpack_require__(90);
+
+	/** Used to compose bitmasks for function metadata. */
+	var PARTIAL_FLAG = 32;
+
+	/**
+	 * Creates a function that invokes `func` with `partials` prepended to the
+	 * arguments it receives. This method is like `_.bind` except it does **not**
+	 * alter the `this` binding.
+	 *
+	 * The `_.partial.placeholder` value, which defaults to `_` in monolithic
+	 * builds, may be used as a placeholder for partially applied arguments.
+	 *
+	 * **Note:** This method doesn't set the "length" property of partially
+	 * applied functions.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.2.0
+	 * @category Function
+	 * @param {Function} func The function to partially apply arguments to.
+	 * @param {...*} [partials] The arguments to be partially applied.
+	 * @returns {Function} Returns the new partially applied function.
+	 * @example
+	 *
+	 * function greet(greeting, name) {
+	 *   return greeting + ' ' + name;
+	 * }
+	 *
+	 * var sayHelloTo = _.partial(greet, 'hello');
+	 * sayHelloTo('fred');
+	 * // => 'hello fred'
+	 *
+	 * // Partially applied with placeholders.
+	 * var greetFred = _.partial(greet, _, 'fred');
+	 * greetFred('hi');
+	 * // => 'hi fred'
+	 */
+	var partial = baseRest(function(func, partials) {
+	  var holders = replaceHolders(partials, getHolder(partial));
+	  return createWrap(func, PARTIAL_FLAG, undefined, partials, holders);
+	});
+
+	// Assign default placeholders.
+	partial.placeholder = {};
+
+	module.exports = partial;
+
+
+/***/ },
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toString = __webpack_require__(234);
+	var toString = __webpack_require__(228);
 
 	module.exports = MopsError;
 
@@ -9137,10 +8926,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 /***/ },
-/* 234 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToString = __webpack_require__(235);
+	var baseToString = __webpack_require__(229);
 
 	/**
 	 * Converts `value` to a string. An empty string is returned for `null`
@@ -9171,7 +8960,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 235 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(6),
