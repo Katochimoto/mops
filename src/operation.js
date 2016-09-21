@@ -41,19 +41,18 @@ Operation.prototype.filter = function (action) {
 };
 
 function iterator(array) {
-    const len = array.length;
     let nextIndex = 0;
 
     return {
         next: function () {
-            if (nextIndex < len) {
+            if (nextIndex < array.length) {
                 const item = array[ nextIndex++ ];
 
                 return {
+                    done: false,
                     value: function () {
                         return item[0].apply(this, item[1].concat(slice.call(arguments)));
-                    },
-                    done: false
+                    }
                 };
 
             } else {

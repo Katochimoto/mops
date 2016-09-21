@@ -8659,21 +8659,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	function iterator(array) {
-	    var len = array.length;
 	    var nextIndex = 0;
 
 	    return {
 	        next: function next() {
-	            if (nextIndex < len) {
+	            if (nextIndex < array.length) {
 	                var _ret = function () {
 	                    var item = array[nextIndex++];
 
 	                    return {
 	                        v: {
+	                            done: false,
 	                            value: function value() {
 	                                return item[0].apply(this, item[1].concat(slice.call(arguments)));
-	                            },
-	                            done: false
+	                            }
 	                        }
 	                    };
 	                }();
