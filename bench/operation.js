@@ -13,18 +13,17 @@
     var operation = new mops.Operation();
 
     for (var i = 0; i < 1000; i++) {
-        operation.set({ obj: i }, action);
+        operation.add(action, { arg: i });
     }
 
-
-
     suite
-    .add('mops.Operation#getObjectsByAction', function () {
-        operation.getObjectsByAction(action);
-    })
+    .add('mops.Operation#entries', function () {
+        var iterator = operation.entries();
+        var action;
 
-    .add('mops.Operation#toArray', function () {
-        operation.toArray();
+        while ((action = iterator.next().value)) {
+            action();
+        }
     });
 
     suite.run({ async: true, queued: true });

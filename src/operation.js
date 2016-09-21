@@ -1,112 +1,56 @@
-const toArray = require('lodash/toArray');
-const Map = require('es6-map');
+const spread = require('lodash/spread');
+const partial = require('lodash/partial');
+const flatten = require('lodash/flatten');
 const mopsSymbol = require('./symbol');
 
 module.exports = Operation;
+
+const wrapper = spread(partial);
 
 /**
  * @class
  */
 function Operation() {
-    Object.defineProperty(this, mopsSymbol.OPERATION, {
-        value: new Map()
-    });
+    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [] });
 }
 
-Operation.prototype.set = function (object, action) {
-    const objects = this[ mopsSymbol.OPERATION ];
-    const actions = objects.get(object);
+Operation.prototype.add = function (action, ...args) {
+    this[ mopsSymbol.OPERATION ].push([
+        action,
+        args
+    ]);
 
-    if (actions) {
-        let count = actions.get(action) || 0;
-        actions.set(action, ++count);
-
-    } else {
-        objects.set(object, new Map([ [ action, 1 ] ]));
-    }
+    return this;
 };
 
-Operation.prototype.delete = function (object, action) {
-    const actions = this[ mopsSymbol.OPERATION ].get(object);
-
-    if (!actions) {
-        return;
-    }
-
-    let count = actions.get(action) || 0;
-    count--;
-
-    if (count > 0) {
-        actions.set(action, count);
-
-    } else {
-        actions.delete(action);
-    }
-};
-
-Operation.prototype.has = function (object, action) {
-    const objects = this[ mopsSymbol.OPERATION ];
-
-    if (action) {
-        const actions = objects.get(object);
-        return Boolean(actions && actions.has(action));
-
-    } else {
-        return objects.has(object);
-    }
-};
-
-Operation.prototype.clear = function (object, action) {
-    const objects = this[ mopsSymbol.OPERATION ];
-
-    if (action) {
-        const actions = objects.get(object);
-
-        if (actions) {
-            actions.delete(action);
-        }
-
-    } else if (object) {
-        objects.delete(object);
-
-    } else {
-        objects.clear();
-    }
+Operation.prototype.clear = function () {
+    this[ mopsSymbol.OPERATION ] = [];
 };
 
 /**
  * @returns {number}
  */
 Operation.prototype.size = function () {
-    return this[ mopsSymbol.OPERATION ].size;
+    return this[ mopsSymbol.OPERATION ].length;
 };
 
-/**
- * @returns {array}
- */
-Operation.prototype.toArray = function () {
-    const objects = [];
-
-    this[ mopsSymbol.OPERATION ].forEach(function operationIterator(actions, object) {
-        objects.push([ object, toArray(actions) ]);
-    });
-
-    return objects;
+Operation.prototype.entries = function () {
+    return iterator(this[ mopsSymbol.OPERATION ]);
 };
 
-/**
- * @param {function} action
- * @returns {array} [[ object1, count1 ], [ object2, count2 ], [ object3, count3 ], ...]
- */
-Operation.prototype.getObjectsByAction = function (action) {
-    const objects = [];
+Operation.prototype.filter = function (action) {
+    const actions = this[ mopsSymbol.OPERATION ].filter(item => item[0] === action);
+    return iterator(actions);
+};
 
-    this[ mopsSymbol.OPERATION ].forEach(function operationIterator(actions, object) {
-        const count = actions.get(action);
-        if (count > 0) {
-            objects.push([ object, count ]);
+function iterator(array) {
+    var nextIndex = 0;
+
+    return {
+        next: function () {
+            return nextIndex < array.length ?
+                { value: wrapper(flatten(array[ nextIndex++ ])), done: false } :
+                { done: true };
         }
-    });
-
-    return objects;
-};
+    };
+}

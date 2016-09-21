@@ -57,9 +57,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	exports.Queue = __webpack_require__(1);
-	exports.Action = __webpack_require__(223);
+	exports.Action = __webpack_require__(230);
 	exports.Context = __webpack_require__(120);
-	exports.Error = __webpack_require__(227);
+	exports.Error = __webpack_require__(233);
 	exports.Checked = __webpack_require__(180);
 	exports.Operation = __webpack_require__(222);
 
@@ -79,7 +79,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Promise = __webpack_require__(98).Promise;
 	var mopsSymbol = __webpack_require__(101);
 	var Context = __webpack_require__(120);
-	var Action = __webpack_require__(223);
+	var Action = __webpack_require__(230);
 
 	module.exports = Queue;
 
@@ -4956,6 +4956,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.SUPER = _Symbol('mops-action-super');
 	exports.CHECKED = _Symbol('mops-checked');
 	exports.OPERATION = _Symbol('mops-operation');
+	exports.ACTION = _Symbol('mops-action');
 
 /***/ },
 /* 102 */
@@ -8610,267 +8611,192 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var toArray = __webpack_require__(5);
-	var Map = __webpack_require__(215);
+	var spread = __webpack_require__(223);
+	var partial = __webpack_require__(226);
+	var flatten = __webpack_require__(227);
 	var mopsSymbol = __webpack_require__(101);
 
 	module.exports = Operation;
+
+	var wrapper = spread(partial);
 
 	/**
 	 * @class
 	 */
 	function Operation() {
-	    Object.defineProperty(this, mopsSymbol.OPERATION, {
-	        value: new Map()
-	    });
+	    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [] });
 	}
 
-	Operation.prototype.set = function (object, action) {
-	    var objects = this[mopsSymbol.OPERATION];
-	    var actions = objects.get(object);
-
-	    if (actions) {
-	        var count = actions.get(action) || 0;
-	        actions.set(action, ++count);
-	    } else {
-	        objects.set(object, new Map([[action, 1]]));
+	Operation.prototype.add = function (action) {
+	    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	        args[_key - 1] = arguments[_key];
 	    }
+
+	    this[mopsSymbol.OPERATION].push([action, args]);
+
+	    return this;
 	};
 
-	Operation.prototype.delete = function (object, action) {
-	    var actions = this[mopsSymbol.OPERATION].get(object);
-
-	    if (!actions) {
-	        return;
-	    }
-
-	    var count = actions.get(action) || 0;
-	    count--;
-
-	    if (count > 0) {
-	        actions.set(action, count);
-	    } else {
-	        actions.delete(action);
-	    }
-	};
-
-	Operation.prototype.has = function (object, action) {
-	    var objects = this[mopsSymbol.OPERATION];
-
-	    if (action) {
-	        var actions = objects.get(object);
-	        return Boolean(actions && actions.has(action));
-	    } else {
-	        return objects.has(object);
-	    }
-	};
-
-	Operation.prototype.clear = function (object, action) {
-	    var objects = this[mopsSymbol.OPERATION];
-
-	    if (action) {
-	        var actions = objects.get(object);
-
-	        if (actions) {
-	            actions.delete(action);
-	        }
-	    } else if (object) {
-	        objects.delete(object);
-	    } else {
-	        objects.clear();
-	    }
+	Operation.prototype.clear = function () {
+	    this[mopsSymbol.OPERATION] = [];
 	};
 
 	/**
 	 * @returns {number}
 	 */
 	Operation.prototype.size = function () {
-	    return this[mopsSymbol.OPERATION].size;
+	    return this[mopsSymbol.OPERATION].length;
 	};
 
-	/**
-	 * @returns {array}
-	 */
-	Operation.prototype.toArray = function () {
-	    var objects = [];
+	Operation.prototype.entries = function () {
+	    return iterator(this[mopsSymbol.OPERATION]);
+	};
 
-	    this[mopsSymbol.OPERATION].forEach(function operationIterator(actions, object) {
-	        objects.push([object, toArray(actions)]);
+	Operation.prototype.filter = function (action) {
+	    var actions = this[mopsSymbol.OPERATION].filter(function (item) {
+	        return item[0] === action;
 	    });
-
-	    return objects;
+	    return iterator(actions);
 	};
 
-	/**
-	 * @param {function} action
-	 * @returns {array} [[ object1, count1 ], [ object2, count2 ], [ object3, count3 ], ...]
-	 */
-	Operation.prototype.getObjectsByAction = function (action) {
-	    var objects = [];
+	function iterator(array) {
+	    var nextIndex = 0;
 
-	    this[mopsSymbol.OPERATION].forEach(function operationIterator(actions, object) {
-	        var count = actions.get(action);
-	        if (count > 0) {
-	            objects.push([object, count]);
+	    return {
+	        next: function next() {
+	            return nextIndex < array.length ? { value: wrapper(flatten(array[nextIndex++])), done: false } : { done: true };
 	        }
-	    });
-
-	    return objects;
-	};
+	    };
+	}
 
 /***/ },
 /* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	var apply = __webpack_require__(51),
+	    arrayPush = __webpack_require__(161),
+	    baseRest = __webpack_require__(50),
+	    castSlice = __webpack_require__(224),
+	    toInteger = __webpack_require__(93);
 
-	var isError = __webpack_require__(224);
-	var isObject = __webpack_require__(3);
-	var wrap = __webpack_require__(225);
-	var Promise = __webpack_require__(98).Promise;
-	var mopsSymbol = __webpack_require__(101);
+	/** Used as the `TypeError` message for "Functions" methods. */
+	var FUNC_ERROR_TEXT = 'Expected a function';
 
-	module.exports = Action;
-
-	/**
-	 * @class
-	 * @param {function} callback
-	 * @returns {function}
-	 */
-	function Action(callback) {
-	    var action = wrap(callback, wrapAction);
-	    Object.defineProperty(action, mopsSymbol.SUPER, { value: callback });
-	    return action;
-	}
+	/* Built-in method references for those with the same name as other `lodash` methods. */
+	var nativeMax = Math.max;
 
 	/**
-	 * @param {*} [data]
-	 * @returns {Promise}
+	 * Creates a function that invokes `func` with the `this` binding of the
+	 * create function and an array of arguments much like
+	 * [`Function#apply`](http://www.ecma-international.org/ecma-262/7.0/#sec-function.prototype.apply).
+	 *
+	 * **Note:** This method is based on the
+	 * [spread operator](https://mdn.io/spread_operator).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 3.2.0
+	 * @category Function
+	 * @param {Function} func The function to spread arguments over.
+	 * @param {number} [start=0] The start position of the spread.
+	 * @returns {Function} Returns the new function.
+	 * @example
+	 *
+	 * var say = _.spread(function(who, what) {
+	 *   return who + ' says ' + what;
+	 * });
+	 *
+	 * say(['fred', 'hello']);
+	 * // => 'fred says hello'
+	 *
+	 * var numbers = Promise.all([
+	 *   Promise.resolve(40),
+	 *   Promise.resolve(36)
+	 * ]);
+	 *
+	 * numbers.then(_.spread(function(x, y) {
+	 *   return x + y;
+	 * }));
+	 * // => a Promise of 76
 	 */
-	Action.resultResolve = function (data) {
-	    return result(data) || Promise.resolve();
-	};
+	function spread(func, start) {
+	  if (typeof func != 'function') {
+	    throw new TypeError(FUNC_ERROR_TEXT);
+	  }
+	  start = start === undefined ? 0 : nativeMax(toInteger(start), 0);
+	  return baseRest(function(args) {
+	    var array = args[start],
+	        otherArgs = castSlice(args, 0, start);
 
-	/**
-	 * @param {*} [data]
-	 * @returns {Promise}
-	 */
-	Action.resultReject = function (data) {
-	    return result(data) || Promise.reject();
-	};
-
-	/**
-	 * @param {function} action
-	 * @param {...*} args
-	 * @returns {function}
-	 * @this {Context}
-	 * @private
-	 */
-	function wrapAction(action) {
-	    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-	        args[_key - 1] = arguments[_key];
+	    if (array) {
+	      arrayPush(otherArgs, array);
 	    }
-
-	    var data = action.apply(this, args);
-	    return result(data) || data;
+	    return apply(func, this, otherArgs);
+	  });
 	}
 
-	/**
-	 * @param {*} data
-	 * @returns {?Promise}
-	 * @private
-	 */
-	function result(data) {
-	    if (isObject(data) && data.hasOwnProperty(mopsSymbol.QUEUE)) {
-	        return data.start();
-	    } else if (isError(data)) {
-	        return Promise.reject(data);
-	    }
-	}
+	module.exports = spread;
+
 
 /***/ },
 /* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObjectLike = __webpack_require__(28);
-
-	/** `Object#toString` result references. */
-	var errorTag = '[object Error]';
-
-	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
+	var baseSlice = __webpack_require__(225);
 
 	/**
-	 * Used to resolve the
-	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
-	 * of values.
+	 * Casts `array` to a slice if it's needed.
+	 *
+	 * @private
+	 * @param {Array} array The array to inspect.
+	 * @param {number} start The start position.
+	 * @param {number} [end=array.length] The end position.
+	 * @returns {Array} Returns the cast slice.
 	 */
-	var objectToString = objectProto.toString;
-
-	/**
-	 * Checks if `value` is an `Error`, `EvalError`, `RangeError`, `ReferenceError`,
-	 * `SyntaxError`, `TypeError`, or `URIError` object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 3.0.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is an error object, else `false`.
-	 * @example
-	 *
-	 * _.isError(new Error);
-	 * // => true
-	 *
-	 * _.isError(Error);
-	 * // => false
-	 */
-	function isError(value) {
-	  if (!isObjectLike(value)) {
-	    return false;
-	  }
-	  return (objectToString.call(value) == errorTag) ||
-	    (typeof value.message == 'string' && typeof value.name == 'string');
+	function castSlice(array, start, end) {
+	  var length = array.length;
+	  end = end === undefined ? length : end;
+	  return (!start && end >= length) ? array : baseSlice(array, start, end);
 	}
 
-	module.exports = isError;
+	module.exports = castSlice;
 
 
 /***/ },
 /* 225 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var identity = __webpack_require__(54),
-	    partial = __webpack_require__(226);
+/***/ function(module, exports) {
 
 	/**
-	 * Creates a function that provides `value` to `wrapper` as its first
-	 * argument. Any additional arguments provided to the function are appended
-	 * to those provided to the `wrapper`. The wrapper is invoked with the `this`
-	 * binding of the created function.
+	 * The base implementation of `_.slice` without an iteratee call guard.
 	 *
-	 * @static
-	 * @memberOf _
-	 * @since 0.1.0
-	 * @category Function
-	 * @param {*} value The value to wrap.
-	 * @param {Function} [wrapper=identity] The wrapper function.
-	 * @returns {Function} Returns the new function.
-	 * @example
-	 *
-	 * var p = _.wrap(_.escape, function(func, text) {
-	 *   return '<p>' + func(text) + '</p>';
-	 * });
-	 *
-	 * p('fred, barney, & pebbles');
-	 * // => '<p>fred, barney, &amp; pebbles</p>'
+	 * @private
+	 * @param {Array} array The array to slice.
+	 * @param {number} [start=0] The start position.
+	 * @param {number} [end=array.length] The end position.
+	 * @returns {Array} Returns the slice of `array`.
 	 */
-	function wrap(value, wrapper) {
-	  wrapper = wrapper == null ? identity : wrapper;
-	  return partial(wrapper, value);
+	function baseSlice(array, start, end) {
+	  var index = -1,
+	      length = array.length;
+
+	  if (start < 0) {
+	    start = -start > length ? 0 : (length + start);
+	  }
+	  end = end > length ? length : end;
+	  if (end < 0) {
+	    end += length;
+	  }
+	  length = start > end ? 0 : ((end - start) >>> 0);
+	  start >>>= 0;
+
+	  var result = Array(length);
+	  while (++index < length) {
+	    result[index] = array[index + start];
+	  }
+	  return result;
 	}
 
-	module.exports = wrap;
+	module.exports = baseSlice;
 
 
 /***/ },
@@ -8933,9 +8859,262 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var baseFlatten = __webpack_require__(228);
+
+	/**
+	 * Flattens `array` a single level deep.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Array
+	 * @param {Array} array The array to flatten.
+	 * @returns {Array} Returns the new flattened array.
+	 * @example
+	 *
+	 * _.flatten([1, [2, [3, [4]], 5]]);
+	 * // => [1, 2, [3, [4]], 5]
+	 */
+	function flatten(array) {
+	  var length = array ? array.length : 0;
+	  return length ? baseFlatten(array, 1) : [];
+	}
+
+	module.exports = flatten;
+
+
+/***/ },
+/* 228 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayPush = __webpack_require__(161),
+	    isFlattenable = __webpack_require__(229);
+
+	/**
+	 * The base implementation of `_.flatten` with support for restricting flattening.
+	 *
+	 * @private
+	 * @param {Array} array The array to flatten.
+	 * @param {number} depth The maximum recursion depth.
+	 * @param {boolean} [predicate=isFlattenable] The function invoked per iteration.
+	 * @param {boolean} [isStrict] Restrict to values that pass `predicate` checks.
+	 * @param {Array} [result=[]] The initial result value.
+	 * @returns {Array} Returns the new flattened array.
+	 */
+	function baseFlatten(array, depth, predicate, isStrict, result) {
+	  var index = -1,
+	      length = array.length;
+
+	  predicate || (predicate = isFlattenable);
+	  result || (result = []);
+
+	  while (++index < length) {
+	    var value = array[index];
+	    if (depth > 0 && predicate(value)) {
+	      if (depth > 1) {
+	        // Recursively flatten arrays (susceptible to call stack limits).
+	        baseFlatten(value, depth - 1, predicate, isStrict, result);
+	      } else {
+	        arrayPush(result, value);
+	      }
+	    } else if (!isStrict) {
+	      result[result.length] = value;
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = baseFlatten;
+
+
+/***/ },
+/* 229 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Symbol = __webpack_require__(6),
+	    isArguments = __webpack_require__(42),
+	    isArray = __webpack_require__(27);
+
+	/** Built-in value references. */
+	var spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
+
+	/**
+	 * Checks if `value` is a flattenable `arguments` object or array.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is flattenable, else `false`.
+	 */
+	function isFlattenable(value) {
+	  return isArray(value) || isArguments(value) ||
+	    !!(spreadableSymbol && value && value[spreadableSymbol]);
+	}
+
+	module.exports = isFlattenable;
+
+
+/***/ },
+/* 230 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 
-	var toString = __webpack_require__(228);
+	var isError = __webpack_require__(231);
+	var isObject = __webpack_require__(3);
+	var wrap = __webpack_require__(232);
+	var Promise = __webpack_require__(98).Promise;
+	var mopsSymbol = __webpack_require__(101);
+
+	module.exports = Action;
+
+	/**
+	 * @class
+	 * @param {function} callback
+	 * @returns {function}
+	 */
+	function Action(callback) {
+	    var action = wrap(callback, wrapAction);
+	    Object.defineProperty(action, mopsSymbol.SUPER, { value: callback });
+	    return action;
+	}
+
+	/**
+	 * @param {*} [data]
+	 * @returns {Promise}
+	 */
+	Action.resultResolve = function (data) {
+	    return result(data) || Promise.resolve();
+	};
+
+	/**
+	 * @param {*} [data]
+	 * @returns {Promise}
+	 */
+	Action.resultReject = function (data) {
+	    return result(data) || Promise.reject();
+	};
+
+	/**
+	 * @param {function} action
+	 * @param {...*} args
+	 * @returns {function}
+	 * @this {Context}
+	 * @private
+	 */
+	function wrapAction(action) {
+	    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	        args[_key - 1] = arguments[_key];
+	    }
+
+	    var data = action.apply(this, args);
+	    return result(data) || data;
+	}
+
+	/**
+	 * @param {*} data
+	 * @returns {?Promise}
+	 * @private
+	 */
+	function result(data) {
+	    if (isObject(data) && data.hasOwnProperty(mopsSymbol.QUEUE)) {
+	        return data.start();
+	    } else if (isError(data)) {
+	        return Promise.reject(data);
+	    }
+	}
+
+/***/ },
+/* 231 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isObjectLike = __webpack_require__(28);
+
+	/** `Object#toString` result references. */
+	var errorTag = '[object Error]';
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/**
+	 * Used to resolve the
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+
+	/**
+	 * Checks if `value` is an `Error`, `EvalError`, `RangeError`, `ReferenceError`,
+	 * `SyntaxError`, `TypeError`, or `URIError` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 3.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an error object, else `false`.
+	 * @example
+	 *
+	 * _.isError(new Error);
+	 * // => true
+	 *
+	 * _.isError(Error);
+	 * // => false
+	 */
+	function isError(value) {
+	  if (!isObjectLike(value)) {
+	    return false;
+	  }
+	  return (objectToString.call(value) == errorTag) ||
+	    (typeof value.message == 'string' && typeof value.name == 'string');
+	}
+
+	module.exports = isError;
+
+
+/***/ },
+/* 232 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var identity = __webpack_require__(54),
+	    partial = __webpack_require__(226);
+
+	/**
+	 * Creates a function that provides `value` to `wrapper` as its first
+	 * argument. Any additional arguments provided to the function are appended
+	 * to those provided to the `wrapper`. The wrapper is invoked with the `this`
+	 * binding of the created function.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Function
+	 * @param {*} value The value to wrap.
+	 * @param {Function} [wrapper=identity] The wrapper function.
+	 * @returns {Function} Returns the new function.
+	 * @example
+	 *
+	 * var p = _.wrap(_.escape, function(func, text) {
+	 *   return '<p>' + func(text) + '</p>';
+	 * });
+	 *
+	 * p('fred, barney, & pebbles');
+	 * // => '<p>fred, barney, &amp; pebbles</p>'
+	 */
+	function wrap(value, wrapper) {
+	  wrapper = wrapper == null ? identity : wrapper;
+	  return partial(wrapper, value);
+	}
+
+	module.exports = wrap;
+
+
+/***/ },
+/* 233 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var toString = __webpack_require__(234);
 
 	module.exports = MopsError;
 
@@ -8958,10 +9137,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 /***/ },
-/* 228 */
+/* 234 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToString = __webpack_require__(229);
+	var baseToString = __webpack_require__(235);
 
 	/**
 	 * Converts `value` to a string. An empty string is returned for `null`
@@ -8992,7 +9171,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 229 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(6),

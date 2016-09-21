@@ -5,3 +5,4 @@ exports.QUEUE = Symbol('mops-queue');
 exports.SUPER = Symbol('mops-action-super');
 exports.CHECKED = Symbol('mops-checked');
 exports.OPERATION = Symbol('mops-operation');
+exports.ACTION = Symbol('mops-action');
