@@ -8696,13 +8696,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var lock = this[mopsSymbol.ACTION_LOCK];
 	    var oper = this[mopsSymbol.OPERATION];
 	    var operSource = data[mopsSymbol.OPERATION];
-
-	    data[mopsSymbol.ACTION_LOCK].forEach(function (action) {
-	        lock.add(action);
-	    });
+	    var lockSource = data[mopsSymbol.ACTION_LOCK];
 
 	    for (var i = 0; i < oper.length; i++) {
-	        if (lock.has(oper[i][0])) {
+	        if (lockSource.has(oper[i][0])) {
 	            oper.splice(i, 1);
 	        }
 	    }
@@ -8710,11 +8707,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var lenSource = operSource.length;
 	    for (var _i = 0; _i < lenSource; _i++) {
 	        var item = operSource[_i];
-
 	        if (!lock.has(item[0])) {
 	            oper.push(item);
 	        }
 	    }
+
+	    lockSource.forEach(function (action) {
+	        lock.add(action);
+	    });
 
 	    return true;
 	};

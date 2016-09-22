@@ -73,13 +73,10 @@ Operation.prototype.merge = function (data) {
     const lock = this[ mopsSymbol.ACTION_LOCK ];
     const oper = this[ mopsSymbol.OPERATION ];
     const operSource = data[ mopsSymbol.OPERATION ];
-
-    data[ mopsSymbol.ACTION_LOCK ].forEach(function (action) {
-        lock.add(action);
-    });
+    const lockSource = data[ mopsSymbol.ACTION_LOCK ];
 
     for (let i = 0; i < oper.length; i++) {
-        if (lock.has(oper[ i ][0])) {
+        if (lockSource.has(oper[ i ][0])) {
             oper.splice(i, 1);
         }
     }
@@ -87,11 +84,14 @@ Operation.prototype.merge = function (data) {
     const lenSource = operSource.length;
     for (let i = 0; i < lenSource; i++) {
         const item = operSource[ i ];
-
         if (!lock.has(item[0])) {
             oper.push(item);
         }
     }
+
+    lockSource.forEach(function (action) {
+        lock.add(action);
+    });
 
     return true;
 };
