@@ -22,6 +22,10 @@ Operation.prototype.add = function (action, ...args) {
     return true;
 };
 
+Operation.prototype.has = function (action) {
+    return this[ mopsSymbol.OPERATION ].some(item => item[0] === action);
+};
+
 Operation.prototype.clear = function () {
     this[ mopsSymbol.OPERATION ] = [];
     this[ mopsSymbol.ACTION_LOCK ].clear();
@@ -49,6 +53,10 @@ Operation.prototype.lock = function (action) {
 
 Operation.prototype.unlock = function (action) {
     this[ mopsSymbol.ACTION_LOCK ].delete(action);
+};
+
+Operation.prototype.isLock = function (action) {
+    return this[ mopsSymbol.ACTION_LOCK ].has(action);
 };
 
 Operation.prototype.merge = function (operation) {

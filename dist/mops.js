@@ -8454,6 +8454,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return true;
 	};
 
+	Operation.prototype.has = function (action) {
+	    return this[mopsSymbol.OPERATION].some(function (item) {
+	        return item[0] === action;
+	    });
+	};
+
 	Operation.prototype.clear = function () {
 	    this[mopsSymbol.OPERATION] = [];
 	    this[mopsSymbol.ACTION_LOCK].clear();
@@ -8484,6 +8490,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	Operation.prototype.unlock = function (action) {
 	    this[mopsSymbol.ACTION_LOCK].delete(action);
+	};
+
+	Operation.prototype.isLock = function (action) {
+	    return this[mopsSymbol.ACTION_LOCK].has(action);
 	};
 
 	Operation.prototype.merge = function (operation) {
