@@ -8468,6 +8468,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	Operation.prototype.lock = function (action) {
 	    this[mopsSymbol.ACTION_LOCK].add(action);
+	    this[mopsSymbol.OPERATION] = this[mopsSymbol.OPERATION].filter(function (item) {
+	        return item[0] !== action;
+	    });
 	};
 
 	Operation.prototype.unlock = function (action) {

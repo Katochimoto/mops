@@ -36,6 +36,8 @@ Operation.prototype.size = function () {
 
 Operation.prototype.lock = function (action) {
     this[ mopsSymbol.ACTION_LOCK ].add(action);
+    this[ mopsSymbol.OPERATION ] = this[ mopsSymbol.OPERATION ]
+        .filter(item => item[0] !== action);
 };
 
 Operation.prototype.unlock = function (action) {
