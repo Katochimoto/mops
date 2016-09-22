@@ -1,3 +1,4 @@
+const Set = require('es6-set');
 const mopsSymbol = require('./symbol');
 
 module.exports = Operation;
@@ -9,19 +10,21 @@ const slice = Array.prototype.slice;
  */
 function Operation() {
     Object.defineProperty(this, mopsSymbol.OPERATION, { value: [] });
+    Object.defineProperty(this, mopsSymbol.ACTION_LOCK, { value: new Set() });
 }
 
 Operation.prototype.add = function (action, ...args) {
-    this[ mopsSymbol.OPERATION ].push([
-        action,
-        args
-    ]);
+    if (this[ mopsSymbol.ACTION_LOCK ].has(action)) {
+        return false;
+    }
 
-    return this;
+    this[ mopsSymbol.OPERATION ].push([ action, args ]);
+    return true;
 };
 
 Operation.prototype.clear = function () {
     this[ mopsSymbol.OPERATION ] = [];
+    this[ mopsSymbol.ACTION_LOCK ].clear();
 };
 
 /**
@@ -29,6 +32,25 @@ Operation.prototype.clear = function () {
  */
 Operation.prototype.size = function () {
     return this[ mopsSymbol.OPERATION ].length;
+};
+
+Operation.prototype.lock = function (action) {
+    this[ mopsSymbol.ACTION_LOCK ].add(action);
+};
+
+Operation.prototype.unlock = function (action) {
+    this[ mopsSymbol.ACTION_LOCK ].delete(action);
+};
+
+Operation.prototype.merge = function (operation) {
+    operation[ mopsSymbol.ACTION_LOCK ].forEach(function (action) {
+        this[ mopsSymbol.ACTION_LOCK ].add(action);
+    }, this);
+
+    this[ mopsSymbol.OPERATION ] =
+        this[ mopsSymbol.OPERATION ]
+        .concat(operation[ mopsSymbol.OPERATION ])
+        .filter(item => !this[ mopsSymbol.ACTION_LOCK ].has(item[0]));
 };
 
 Operation.prototype.entries = function () {
