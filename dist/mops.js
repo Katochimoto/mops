@@ -8477,6 +8477,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	Operation.prototype.merge = function (operation) {
 	    var _this = this;
 
+	    if (!operation || !(operation instanceof Operation)) {
+	        return;
+	    }
+
 	    operation[mopsSymbol.ACTION_LOCK].forEach(function (action) {
 	        this[mopsSymbol.ACTION_LOCK].add(action);
 	    }, this);
