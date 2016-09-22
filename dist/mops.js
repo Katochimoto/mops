@@ -8460,10 +8460,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
+	 * @param {function} [action]
 	 * @returns {number}
 	 */
-	Operation.prototype.size = function () {
-	    return this[mopsSymbol.OPERATION].length;
+	Operation.prototype.size = function (action) {
+	    var operation = this[mopsSymbol.OPERATION];
+
+	    if (action) {
+	        return operation.filter(function (item) {
+	            return item[0] === action;
+	        }).length;
+	    }
+
+	    return operation.length;
 	};
 
 	Operation.prototype.lock = function (action) {

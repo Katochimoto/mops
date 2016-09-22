@@ -28,10 +28,17 @@ Operation.prototype.clear = function () {
 };
 
 /**
+ * @param {function} [action]
  * @returns {number}
  */
-Operation.prototype.size = function () {
-    return this[ mopsSymbol.OPERATION ].length;
+Operation.prototype.size = function (action) {
+    const operation = this[ mopsSymbol.OPERATION ];
+
+    if (action) {
+        return operation.filter(item => item[0] === action).length;
+    }
+
+    return operation.length;
 };
 
 Operation.prototype.lock = function (action) {
