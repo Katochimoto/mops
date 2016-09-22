@@ -24,6 +24,17 @@
         while ((action = iterator.next().value)) {
             action();
         }
+    })
+
+    .add('mops.Operation#clear', function () {
+        var action = function () {};
+        var operation = new mops.Operation();
+
+        for (var i = 0; i < 1000; i++) {
+            operation.add(action, { arg: i });
+        }
+
+        operation.clear();
     });
 
     suite.run({ async: true, queued: true });
