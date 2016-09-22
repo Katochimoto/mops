@@ -28,6 +28,7 @@ Operation.prototype.has = function (action) {
 
 Operation.prototype.clear = function () {
     this[ mopsSymbol.OPERATION ] = [];
+    // this[ mopsSymbol.OPERATION ].splice(0, this[ mopsSymbol.OPERATION ].length);
     this[ mopsSymbol.ACTION_LOCK ].clear();
 };
 
@@ -61,7 +62,7 @@ Operation.prototype.isLock = function (action) {
 
 Operation.prototype.merge = function (operation) {
     if (!operation || !(operation instanceof Operation)) {
-        return;
+        return false;
     }
 
     operation[ mopsSymbol.ACTION_LOCK ].forEach(function (action) {
@@ -72,6 +73,8 @@ Operation.prototype.merge = function (operation) {
         this[ mopsSymbol.OPERATION ]
         .concat(operation[ mopsSymbol.OPERATION ])
         .filter(item => !this[ mopsSymbol.ACTION_LOCK ].has(item[0]));
+
+    return true;
 };
 
 Operation.prototype.entries = function () {

@@ -1,240 +1,288 @@
 const assert = require('chai').assert;
+const sinon = require('sinon');
 const mops = require('../src/mops');
 
-xdescribe('Operation', function () {
+describe('Operation', function () {
 
-    describe('#set', function () {
-        it('должен добавить действие для объекта', function () {
-            let object = {};
+    beforeEach(function () {
+        this.sinon = sinon.sandbox.create();
+    });
+
+    afterEach(function () {
+        this.sinon.restore();
+        delete this.sinon;
+    });
+
+    describe('#add', function () {
+        it('должен добавить действие', function () {
             let action = function () {};
             let operations = new mops.Operation();
 
-            operations.set(object, action);
+            operations.add(action);
 
-            assert.deepEqual(operations.toArray(), [[ object, [[ action, 1 ]] ]]);
+            assert.equal(operations.size(action), 1);
         });
 
-        it('повторное добавление действия инкрементирует счетчик', function () {
-            let object = {};
+        it('одно и то же действие при добавлении создает две операции', function () {
             let action = function () {};
             let operations = new mops.Operation();
 
-            operations.set(object, action);
-            operations.set(object, action);
+            operations.add(action);
+            operations.add(action);
 
-            assert.deepEqual(operations.toArray(), [[ object, [[ action, 2 ]] ]]);
+            assert.equal(operations.size(action), 2);
         });
     });
 
-    describe('#delete', function () {
-        it('должно декрементировать счетчик', function () {
-            let object = {};
+    describe('#has', function () {
+        it('должно вернуть true, если действие есть в операциях', function () {
             let action = function () {};
             let operations = new mops.Operation();
 
-            operations.set(object, action);
-            operations.set(object, action);
-            operations.set(object, action);
+            operations.add(action);
 
-            operations.delete(object, action);
-            operations.delete(object, action);
-
-            assert.deepEqual(operations.toArray(), [[ object, [[ action, 1 ]] ]]);
+            assert.isOk(operations.has(action));
         });
 
-        it('сброс счетчика вызовов убирает действие', function () {
-            let object = {};
+        it('должно вернуть false, если действия нет в операциях', function () {
+            let action = function () {};
+            let otherAction = function () {};
+            let operations = new mops.Operation();
+
+            operations.add(action);
+
+            assert.isNotOk(operations.has(otherAction));
+        });
+    });
+
+    describe('#size', function () {
+        it('должно вернуть размер очереди операций', function () {
+            let action = function () {};
+            let otherAction = function () {};
+            let operations = new mops.Operation();
+
+            operations.add(action);
+            operations.add(otherAction);
+
+            assert.equal(operations.size(), 2);
+        });
+
+        it('если указано действие, должно вернуть количество операций с указанным действием', function () {
+            let action = function () {};
+            let otherAction = function () {};
+            let operations = new mops.Operation();
+
+            operations.add(action);
+            operations.add(otherAction);
+
+            assert.equal(operations.size(otherAction), 1);
+        });
+    });
+
+    describe('#clear', function () {
+        it('должно очистить очередь операций', function () {
+            let action = function () {};
+            let otherAction = function () {};
+            let operations = new mops.Operation();
+
+            operations.add(action);
+            operations.add(otherAction);
+            operations.clear();
+
+            assert.equal(operations.size(), 0);
+        });
+
+        it('должно очистить локи', function () {
             let action = function () {};
             let operations = new mops.Operation();
 
-            operations.set(object, action);
-            operations.set(object, action);
+            operations.lock(action);
+            operations.clear();
 
-            operations.delete(object, action);
-            operations.delete(object, action);
-
-            assert.deepEqual(operations.toArray(), [[ object, [] ]]);
+            assert.isNotOk(operations.isLock(action));
         });
     });
 
-    /*
-    describe('#clear()', function () {
-        it('должен удалить все элементы из списка', function () {
-            let o1 = {};
-            let o2 = {};
-            let checked = new mops.Checked([ o1, o2 ]);
-            checked.clear();
-            let items = checked.toArray();
+    describe('#lock', function () {
+        it('должно добавить действие в лок', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
 
-            assert.equal(items.length, 0);
+            operations.lock(action);
+
+            assert.isOk(operations.isLock(action));
+        });
+
+        it('заблокированное действие нельзя добавить', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.lock(action);
+            operations.add(action);
+
+            assert.equal(operations.size(action), 0);
+        });
+
+        it('ранее добавленное заблокированное действие должно быть удалено', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.add(action);
+            operations.lock(action);
+
+            assert.equal(operations.size(action), 0);
         });
     });
 
-    describe('#uncheck()', function () {
-        it('должен удалить элемент из списка', function () {
-            let o1 = {};
-            let o2 = {};
-            let checked = new mops.Checked([ o1, o2 ]);
-            checked.uncheck(o2);
-            let items = checked.toArray();
+    describe('#unlock', function () {
+        it('должно убрать лок с действия', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
 
-            assert.isOk(items.indexOf(o1) !== -1);
-            assert.isNotOk(items.indexOf(o2) !== -1);
+            operations.lock(action);
+            operations.unlock(action);
+
+            assert.isNotOk(operations.isLock(action));
         });
     });
 
-    describe('#has()', function () {
-        it('должен вернуть true если объект принадлежит набору', function () {
-            let o1 = {};
-            let checked = new mops.Checked([ o1 ]);
+    describe('#isLock', function () {
+        it('должно вернуть true, если действие заблокировано', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
 
-            assert.isOk(checked.has(o1));
+            operations.lock(action);
+
+            assert.isOk(operations.isLock(action));
         });
 
-        it('должен вернуть false если объект не принадлежит набору', function () {
-            let o1 = {};
-            let o2 = {};
-            let checked = new mops.Checked([ o1 ]);
+        it('должно вернуть false, если действие не заблокировано', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
 
-            assert.isNotOk(checked.has(o2));
-        });
-    });
-
-    describe('#size()', function () {
-        it('должен вернуть количество элементов в списке', function () {
-            let o1 = {};
-            let o2 = {};
-            let checked = new mops.Checked([ o1, o2 ]);
-
-            assert.equal(checked.size(), 2);
+            assert.isNotOk(operations.isLock(action));
         });
     });
 
-    describe('#toArray()', function () {
-        it('должен вернуть список в виде массива', function () {
-            let o1 = {};
-            let o2 = {};
-            let checked = new mops.Checked([ o1, o2 ]);
-            let items = checked.toArray();
+    describe('#merge', function () {
+        it('должно объединить блокироваки действий', function () {
+            let action = function () {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
 
-            assert.isOk(Array.isArray(items));
-            assert.isOk(items.indexOf(o1) !== -1);
-            assert.isOk(items.indexOf(o2) !== -1);
+            operations1.lock(action);
+            operations2.merge(operations1);
+
+            assert.isOk(operations2.isLock(action));
+        });
+
+        it('должно объединить очереди', function () {
+            let action1 = function () {};
+            let operations1 = new mops.Operation();
+            let action2 = function () {};
+            let operations2 = new mops.Operation();
+
+            operations1.add(action1);
+            operations2.add(action2);
+            operations2.merge(operations1);
+
+            assert.equal(operations2.size(action1), 1);
+        });
+
+        it('объединенная очередь не должна содержить действий из обоих наборов блокировок', function () {
+            let action1 = function () {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.add(action1);
+            operations2.lock(action1);
+            operations2.merge(operations1);
+
+            assert.equal(operations2.size(action1), 0);
+        });
+
+        it('должно вернуть false при попытке объединить не очередь', function () {
+            let fakeOperations = function () {};
+            let operations = new mops.Operation();
+
+            assert.isNotOk(operations.merge(fakeOperations));
+        });
+
+        it('должно вернуть true при успешном объединении', function () {
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            assert.isOk(operations2.merge(operations1));
         });
     });
 
-    describe('#getGroups', function () {
-        it('должен вернуть пустой Map, если нет выбранных элементов', function () {
-            let group = function () { return []; };
-            let checked = new mops.Checked();
-            let items = checked.getGroups(group);
-            assert.equal(items.length, 0);
+    describe('#entries', function () {
+        it('действие вызываются в порядке добавления', function () {
+            let operations = new mops.Operation();
+            let action1 = this.sinon.spy();
+            let action2 = this.sinon.spy();
+
+            operations.add(action1);
+            operations.add(action2);
+
+            let iter = operations.entries();
+            let action;
+            while ((action = iter.next().value)) {
+                action();
+            }
+
+            assert(action2.calledAfter(action1));
         });
 
-        it('должен вернуть группу элементов', function () {
-            let o1 = {};
-            let o2 = {};
-            let o3 = {};
-            let group = function (item) {
-                if (item === o1 || item === o2) {
-                    return o3;
-                }
-            };
+        it('действие вызывается с аргументами, указанными при добавлении', function () {
+            let operations = new mops.Operation();
+            let action1 = this.sinon.spy();
 
-            let checked = new mops.Checked();
-            checked.check(o1);
-            checked.check(o2);
+            operations.add(action1, 1, 2, 3);
 
-            let items = checked.getGroups(group);
-            assert.deepEqual(items, [[ o3, [ o1, o2 ] ]]);
+            let iter = operations.entries();
+            let action;
+            while ((action = iter.next().value)) {
+                action();
+            }
+
+            assert(action1.calledWith(1, 2, 3));
         });
 
-        it('должен вернуть пустой Map, если у элементов нет групп', function () {
-            let o1 = {};
-            let o2 = {};
-            let group = function () {};
+        it('аргументы в момент вызова добавляются после указанных при добавлении', function () {
+            let operations = new mops.Operation();
+            let action1 = this.sinon.spy();
 
-            let checked = new mops.Checked();
-            checked.check(o1);
-            checked.check(o2);
+            operations.add(action1, 1, 2, 3);
 
-            let items = checked.getGroups(group);
-            assert.equal(items.length, 0);
-        });
-    });
+            let iter = operations.entries();
+            let action;
+            while ((action = iter.next().value)) {
+                action(4, 5, 6);
+            }
 
-    describe('#getCheckedGroups()', function () {
-        it('если нет групп, возвращает полный набор', function () {
-            let o1 = {};
-            let o2 = {};
-            let group = function () { return []; };
-
-            let checked = new mops.Checked();
-            checked.check(o1);
-            checked.check(o2);
-
-            let items = checked.getCheckedGroups(group);
-
-            assert.isOk(items.has(o1));
-            assert.isOk(items.has(o2));
-        });
-
-        it('елементы, входящие в группу, отбрасываются', function () {
-            let o1 = {};
-            let o2 = {};
-            let o3 = {};
-            let group = function (item) {
-                if (item === o1 || item === o2) {
-                    return o3;
-                }
-            };
-
-            let checked = new mops.Checked();
-            checked.check(o1);
-            checked.check(o2);
-            checked.check(o3);
-
-            let items = checked.getCheckedGroups(group);
-
-            assert.isNotOk(items.has(o1));
-            assert.isNotOk(items.has(o2));
-            assert.isOk(items.has(o3));
-        });
-
-        it('сразу исключает элемент из списка, входящий в группу из списка', function () {
-            let o1 = { o: 1 };
-            let o2 = { o: 2 };
-            let o3 = { o: 3 }; // будет сразу исключено
-            let group = function (item) {
-                if (item === o1 || item === o3) {
-                    return o2;
-                }
-            };
-
-            let checked = new mops.Checked();
-            checked.check(o1);
-            checked.check(o2);
-            checked.check(o3);
-
-            let items = checked.getCheckedGroups(group);
-
-            assert.isNotOk(items.has(o1));
-            assert.isOk(items.has(o2));
-        });
-
-        it('должен вернуть объект mops.Checked', function () {
-            let o1 = {};
-            let o2 = {};
-            let group = function () { return []; };
-
-            let checked = new mops.Checked();
-            checked.check(o1);
-            checked.check(o2);
-
-            let items = checked.getCheckedGroups(group);
-
-            assert.instanceOf(items, mops.Checked, '#getCheckedGroups() is an instance of mops.Checked');
+            assert(action1.calledWith(1, 2, 3, 4, 5, 6));
         });
     });
-    */
+
+    describe('#filter', function () {
+        it('возвращает итератор операций по указанному действию', function () {
+            let operations = new mops.Operation();
+            let action1 = this.sinon.spy();
+            let action2 = this.sinon.spy();
+
+            operations.add(action1);
+            operations.add(action1);
+            operations.add(action2);
+
+            let iter = operations.filter(action1);
+            let action;
+            while ((action = iter.next().value)) {
+                action();
+            }
+
+            assert.strictEqual(action1.callCount, 2);
+            assert.strictEqual(action2.callCount, 0);
+        });
+    });
 });
