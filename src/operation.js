@@ -9,7 +9,7 @@ const slice = Array.prototype.slice;
  * @class
  */
 function Operation() {
-    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [] });
+    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [], writable: true });
     Object.defineProperty(this, mopsSymbol.ACTION_LOCK, { value: new Set() });
 }
 
