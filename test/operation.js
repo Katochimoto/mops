@@ -132,6 +132,19 @@ describe('Operation', function () {
 
             assert.equal(operations.size(action), 0);
         });
+
+        it('действия, не попавшие в лок, сохраняются', function () {
+            let action1 = function () {};
+            let action2 = function () {};
+            let operations = new mops.Operation();
+
+            operations.add(action2);
+            operations.add(action1);
+            operations.lock(action1);
+
+            assert.equal(operations.size(action1), 0);
+            assert.equal(operations.size(action2), 1);
+        });
     });
 
     describe('#unlock', function () {
@@ -166,14 +179,17 @@ describe('Operation', function () {
 
     describe('#merge', function () {
         it('должно объединить блокироваки действий', function () {
-            let action = function () {};
+            let action1 = function () {};
+            let action2 = function () {};
             let operations1 = new mops.Operation();
             let operations2 = new mops.Operation();
 
-            operations1.lock(action);
+            operations1.lock(action1);
+            operations2.lock(action2);
             operations2.merge(operations1);
 
-            assert.isOk(operations2.isLock(action));
+            assert.isOk(operations2.isLock(action1));
+            assert.isOk(operations2.isLock(action2));
         });
 
         it('должно объединить очереди', function () {
@@ -189,7 +205,7 @@ describe('Operation', function () {
             assert.equal(operations2.size(action1), 1);
         });
 
-        it('объединенная очередь не должна содержить действий из обоих наборов блокировок', function () {
+        it('объединенная очередь не должна содержить действий из набора блокировок приемника', function () {
             let action1 = function () {};
             let operations1 = new mops.Operation();
             let operations2 = new mops.Operation();
@@ -199,6 +215,28 @@ describe('Operation', function () {
             operations2.merge(operations1);
 
             assert.equal(operations2.size(action1), 0);
+        });
+
+        it('объединенная очередь не должна содержить действий из набора блокировок источника', function () {
+            let action1 = function () {};
+            let action2 = function () {};
+            let action3 = function () {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.lock(action1);
+            operations1.add(action2);
+            operations1.add(action3);
+
+            operations2.lock(action2);
+            operations2.add(action1);
+            operations2.add(action3);
+
+            operations2.merge(operations1);
+
+            assert.equal(operations2.size(action1), 0);
+            assert.equal(operations2.size(action2), 0);
+            assert.equal(operations2.size(action3), 2);
         });
 
         it('должно вернуть false при попытке объединить не очередь', function () {

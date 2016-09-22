@@ -8624,7 +8624,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @class
 	 */
 	function Operation() {
-	    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [], writable: true });
+	    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [] });
 	    Object.defineProperty(this, mopsSymbol.ACTION_LOCK, { value: new Set() });
 	}
 
@@ -8648,8 +8648,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	Operation.prototype.clear = function () {
-	    this[mopsSymbol.OPERATION] = [];
-	    // this[ mopsSymbol.OPERATION ].splice(0, this[ mopsSymbol.OPERATION ].length);
+	    this[mopsSymbol.OPERATION].length = 0;
 	    this[mopsSymbol.ACTION_LOCK].clear();
 	};
 
@@ -8658,22 +8657,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {number}
 	 */
 	Operation.prototype.size = function (action) {
-	    var operation = this[mopsSymbol.OPERATION];
+	    var oper = this[mopsSymbol.OPERATION];
 
 	    if (action) {
-	        return operation.filter(function (item) {
+	        return oper.filter(function (item) {
 	            return item[0] === action;
 	        }).length;
 	    }
 
-	    return operation.length;
+	    return oper.length;
 	};
 
 	Operation.prototype.lock = function (action) {
+	    var oper = this[mopsSymbol.OPERATION];
+
 	    this[mopsSymbol.ACTION_LOCK].add(action);
-	    this[mopsSymbol.OPERATION] = this[mopsSymbol.OPERATION].filter(function (item) {
-	        return item[0] !== action;
-	    });
+
+	    for (var i = 0; i < oper.length; i++) {
+	        if (oper[i][0] === action) {
+	            oper.splice(i, 1);
+	        }
+	    }
 	};
 
 	Operation.prototype.unlock = function (action) {
@@ -8684,20 +8688,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this[mopsSymbol.ACTION_LOCK].has(action);
 	};
 
-	Operation.prototype.merge = function (operation) {
-	    var _this = this;
-
-	    if (!operation || !(operation instanceof Operation)) {
+	Operation.prototype.merge = function (data) {
+	    if (!data || !(data instanceof Operation)) {
 	        return false;
 	    }
 
-	    operation[mopsSymbol.ACTION_LOCK].forEach(function (action) {
-	        this[mopsSymbol.ACTION_LOCK].add(action);
-	    }, this);
+	    var lock = this[mopsSymbol.ACTION_LOCK];
+	    var oper = this[mopsSymbol.OPERATION];
+	    var operSource = data[mopsSymbol.OPERATION];
 
-	    this[mopsSymbol.OPERATION] = this[mopsSymbol.OPERATION].concat(operation[mopsSymbol.OPERATION]).filter(function (item) {
-	        return !_this[mopsSymbol.ACTION_LOCK].has(item[0]);
+	    data[mopsSymbol.ACTION_LOCK].forEach(function (action) {
+	        lock.add(action);
 	    });
+
+	    for (var i = 0; i < oper.length; i++) {
+	        if (lock.has(oper[i][0])) {
+	            oper.splice(i, 1);
+	        }
+	    }
+
+	    var lenSource = operSource.length;
+	    for (var _i = 0; _i < lenSource; _i++) {
+	        var item = operSource[_i];
+
+	        if (!lock.has(item[0])) {
+	            oper.push(item);
+	        }
+	    }
 
 	    return true;
 	};
@@ -8707,10 +8724,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	Operation.prototype.filter = function (action) {
-	    var actions = this[mopsSymbol.OPERATION].filter(function (item) {
+	    var oper = this[mopsSymbol.OPERATION].filter(function (item) {
 	        return item[0] === action;
 	    });
-	    return iterator(actions);
+	    return iterator(oper);
 	};
 
 	function iterator(array) {

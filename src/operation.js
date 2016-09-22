@@ -9,7 +9,7 @@ const slice = Array.prototype.slice;
  * @class
  */
 function Operation() {
-    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [], writable: true });
+    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [] });
     Object.defineProperty(this, mopsSymbol.ACTION_LOCK, { value: new Set() });
 }
 
@@ -27,8 +27,7 @@ Operation.prototype.has = function (action) {
 };
 
 Operation.prototype.clear = function () {
-    this[ mopsSymbol.OPERATION ] = [];
-    // this[ mopsSymbol.OPERATION ].splice(0, this[ mopsSymbol.OPERATION ].length);
+    this[ mopsSymbol.OPERATION ].length = 0;
     this[ mopsSymbol.ACTION_LOCK ].clear();
 };
 
@@ -37,19 +36,25 @@ Operation.prototype.clear = function () {
  * @returns {number}
  */
 Operation.prototype.size = function (action) {
-    const operation = this[ mopsSymbol.OPERATION ];
+    const oper = this[ mopsSymbol.OPERATION ];
 
     if (action) {
-        return operation.filter(item => item[0] === action).length;
+        return oper.filter(item => item[0] === action).length;
     }
 
-    return operation.length;
+    return oper.length;
 };
 
 Operation.prototype.lock = function (action) {
+    const oper = this[ mopsSymbol.OPERATION ];
+
     this[ mopsSymbol.ACTION_LOCK ].add(action);
-    this[ mopsSymbol.OPERATION ] = this[ mopsSymbol.OPERATION ]
-        .filter(item => item[0] !== action);
+
+    for (let i = 0; i < oper.length; i++) {
+        if (oper[ i ][0] === action) {
+            oper.splice(i, 1);
+        }
+    }
 };
 
 Operation.prototype.unlock = function (action) {
@@ -60,19 +65,33 @@ Operation.prototype.isLock = function (action) {
     return this[ mopsSymbol.ACTION_LOCK ].has(action);
 };
 
-Operation.prototype.merge = function (operation) {
-    if (!operation || !(operation instanceof Operation)) {
+Operation.prototype.merge = function (data) {
+    if (!data || !(data instanceof Operation)) {
         return false;
     }
 
-    operation[ mopsSymbol.ACTION_LOCK ].forEach(function (action) {
-        this[ mopsSymbol.ACTION_LOCK ].add(action);
-    }, this);
+    const lock = this[ mopsSymbol.ACTION_LOCK ];
+    const oper = this[ mopsSymbol.OPERATION ];
+    const operSource = data[ mopsSymbol.OPERATION ];
 
-    this[ mopsSymbol.OPERATION ] =
-        this[ mopsSymbol.OPERATION ]
-        .concat(operation[ mopsSymbol.OPERATION ])
-        .filter(item => !this[ mopsSymbol.ACTION_LOCK ].has(item[0]));
+    data[ mopsSymbol.ACTION_LOCK ].forEach(function (action) {
+        lock.add(action);
+    });
+
+    for (let i = 0; i < oper.length; i++) {
+        if (lock.has(oper[ i ][0])) {
+            oper.splice(i, 1);
+        }
+    }
+
+    const lenSource = operSource.length;
+    for (let i = 0; i < lenSource; i++) {
+        const item = operSource[ i ];
+
+        if (!lock.has(item[0])) {
+            oper.push(item);
+        }
+    }
 
     return true;
 };
@@ -82,8 +101,8 @@ Operation.prototype.entries = function () {
 };
 
 Operation.prototype.filter = function (action) {
-    const actions = this[ mopsSymbol.OPERATION ].filter(item => item[0] === action);
-    return iterator(actions);
+    const oper = this[ mopsSymbol.OPERATION ].filter(item => item[0] === action);
+    return iterator(oper);
 };
 
 function iterator(array) {
