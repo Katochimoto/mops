@@ -93,6 +93,8 @@ Operation.prototype.merge = function (data) {
         lock.add(action);
     });
 
+    data.clear();
+
     return true;
 };
 
