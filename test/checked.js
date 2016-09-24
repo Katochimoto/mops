@@ -109,6 +109,44 @@ describe('Checked', function () {
     });
 
     describe('#getCheckedGroups()', function () {
+        it('1', function () {
+            let o1 = { o: 1 };
+            let o2 = { o: 2 };
+            let group = function (item) {
+                if (item === o2) {
+                    return o1;
+                }
+            };
+
+            let checked = new mops.Checked();
+            checked.check(o1);
+            checked.check(o2);
+
+            let items = checked.getCheckedGroups(group);
+
+            assert.isOk(items.has(o1));
+            assert.isNotOk(items.has(o2));
+        });
+
+        it('2', function () {
+            let o1 = { o: 1 };
+            let o2 = { o: 2 };
+            let group = function (item) {
+                if (item === o1) {
+                    return o2;
+                }
+            };
+
+            let checked = new mops.Checked();
+            checked.check(o1);
+            checked.check(o2);
+
+            let items = checked.getCheckedGroups(group);
+
+            assert.isNotOk(items.has(o1));
+            assert.isOk(items.has(o2));
+        });
+
         it('если нет групп, возвращает полный набор', function () {
             let o1 = {};
             let o2 = {};

@@ -7020,9 +7020,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	Checked.prototype.getGroups = function (getItemGroups) {
 	    var groups = new Map();
 
-	    this[mopsSymbol.CHECKED].forEach(function checkedIterator(item) {
+	    this[mopsSymbol.CHECKED].forEach(function mopsCheckedIterator(item) {
 	        var itemGroups = castArray(getItemGroups(item) || []);
-
 	        if (itemGroups.length) {
 	            itemGroups.map(getSgroup, groups).forEach(addInSgroup, item);
 	        }
@@ -7039,31 +7038,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var checked = new Set(this[mopsSymbol.CHECKED]);
 	    var groups = new Map();
 
-	    checked.forEach(function checkedIterator(item) {
-	        var sgroup = groups.get(item);
-
-	        if (sgroup && sgroup.length) {
-	            sgroup.forEach(clearFromGroup, checked);
-	            groups.set(item, null);
-	        }
-
+	    checked.forEach(function mopsCheckedIterator(item) {
 	        var itemGroups = castArray(getItemGroups(item) || []);
-
 	        if (itemGroups.length) {
-	            var inGroup = itemGroups.some(checkInGroup, groups);
-
-	            if (inGroup) {
-	                checked.delete(item);
-	            } else {
-	                itemGroups.map(getSgroup, groups).forEach(addInSgroup, item);
-	            }
+	            itemGroups.map(getSgroup, groups).forEach(addInSgroup, item);
 	        }
 	    });
 
+	    groups.forEach(groupsIterator, checked);
 	    groups.clear();
 
 	    return new this.constructor(toArray(checked));
 	};
+
+	function groupsIterator(items, group) {
+	    if (this.has(group)) {
+	        items.forEach(clearFromGroup, this);
+	    }
+	}
 
 	function getSgroup(group) {
 	    var sgroup = this.get(group);
@@ -7078,10 +7070,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function addInSgroup(sgroup) {
 	    sgroup.push(this);
-	}
-
-	function checkInGroup(group) {
-	    return this.get(group) === null;
 	}
 
 	function clearFromGroup(item) {

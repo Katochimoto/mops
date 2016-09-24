@@ -63,9 +63,8 @@ Checked.prototype.toArray = function () {
 Checked.prototype.getGroups = function (getItemGroups) {
     const groups = new Map();
 
-    this[ mopsSymbol.CHECKED ].forEach(function checkedIterator(item) {
+    this[ mopsSymbol.CHECKED ].forEach(function mopsCheckedIterator(item) {
         const itemGroups = castArray(getItemGroups(item) || []);
-
         if (itemGroups.length) {
             itemGroups
                 .map(getSgroup, groups)
@@ -84,34 +83,26 @@ Checked.prototype.getCheckedGroups = function (getItemGroups) {
     const checked = new Set(this[ mopsSymbol.CHECKED ]);
     const groups = new Map();
 
-    checked.forEach(function checkedIterator(item) {
-        const sgroup = groups.get(item);
-
-        if (sgroup && sgroup.length) {
-            sgroup.forEach(clearFromGroup, checked);
-            groups.set(item, null);
-        }
-
+    checked.forEach(function mopsCheckedIterator(item) {
         const itemGroups = castArray(getItemGroups(item) || []);
-
         if (itemGroups.length) {
-            const inGroup = itemGroups.some(checkInGroup, groups);
-
-            if (inGroup) {
-                checked.delete(item);
-
-            } else {
-                itemGroups
-                    .map(getSgroup, groups)
-                    .forEach(addInSgroup, item);
-            }
+            itemGroups
+                .map(getSgroup, groups)
+                .forEach(addInSgroup, item);
         }
     });
 
+    groups.forEach(groupsIterator, checked);
     groups.clear();
 
     return new this.constructor(toArray(checked));
 };
+
+function groupsIterator(items, group) {
+    if (this.has(group)) {
+        items.forEach(clearFromGroup, this);
+    }
+}
 
 function getSgroup(group) {
     let sgroup = this.get(group);
@@ -126,10 +117,6 @@ function getSgroup(group) {
 
 function addInSgroup(sgroup) {
     sgroup.push(this);
-}
-
-function checkInGroup(group) {
-    return this.get(group) === null;
 }
 
 function clearFromGroup(item) {
