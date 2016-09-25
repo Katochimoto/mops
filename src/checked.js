@@ -18,7 +18,7 @@ module.exports = Checked;
  */
 function Checked(checked) {
     Object.defineProperty(this, mopsSymbol.CHECKED, {
-        value: isSet(checked) ? checked : new Set(Array.isArray(checked) ? checked : [])
+        value: isSet(checked) ? checked : new Set(Array.isArray(checked) ? checked : [ checked ])
     });
 }
 

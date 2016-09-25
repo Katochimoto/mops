@@ -3,6 +3,32 @@ const mops = require('../src/mops');
 
 describe('Checked', function () {
 
+    describe('#constructor', function () {
+        it('можно создать из одного элемента', function () {
+            let o1 = {};
+            let checked = new mops.Checked(o1);
+
+            assert.isOk(checked.has(o1));
+        });
+
+        it('можно создать из массива элементов', function () {
+            let o1 = {};
+            let o2 = {};
+            let checked = new mops.Checked([ o1, o2 ]);
+
+            assert.isOk(checked.has(o1));
+            assert.isOk(checked.has(o2));
+        });
+
+        it('можно создать из Set', function () {
+            let o1 = {};
+            let set = new Set([ o1 ])
+            let checked = new mops.Checked(set);
+
+            assert.isOk(checked.has(o1));
+        });
+    });
+
     describe('#clear()', function () {
         it('должен удалить все элементы из списка', function () {
             let o1 = {};
