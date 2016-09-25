@@ -109,7 +109,25 @@ describe('Checked', function () {
     });
 
     describe('#getCheckedGroups()', function () {
-        it('1', function () {
+        it('должен вернуть все элементы, если группы не принадлежат списку', function () {
+            let o1 = { o: 1 };
+            let o2 = { o: 2 };
+            let g1 = { g: 1 };
+            let group = function (item) {
+                return g1;
+            };
+
+            let checked = new mops.Checked();
+            checked.check(o1);
+            checked.check(o2);
+
+            let items = checked.getCheckedGroups(group);
+
+            assert.isOk(items.has(o1));
+            assert.isOk(items.has(o2));
+        });
+
+        it('должен удалить элемент группы, если группа добавлена первой', function () {
             let o1 = { o: 1 };
             let o2 = { o: 2 };
             let group = function (item) {
@@ -128,7 +146,7 @@ describe('Checked', function () {
             assert.isNotOk(items.has(o2));
         });
 
-        it('2', function () {
+        it('должен удалить элемент группы, если группа добавлена после', function () {
             let o1 = { o: 1 };
             let o2 = { o: 2 };
             let group = function (item) {

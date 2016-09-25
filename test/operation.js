@@ -145,6 +145,18 @@ describe('Operation', function () {
             assert.equal(operations.size(action1), 0);
             assert.equal(operations.size(action2), 1);
         });
+
+        it('повторное добавление метода в лок не вызывает чистку очереди', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.add(action);
+            operations.lock(action);
+            operations.add(action);
+            operations.lock(action);
+
+            assert.equal(operations.size(action), 0);
+        });
     });
 
     describe('#unlock', function () {

@@ -1,7 +1,13 @@
+/* @ifdef LODASH */
 const isFunction = require('lodash/isFunction');
 const isUndefined = require('lodash/isUndefined');
 const toArray = require('lodash/toArray');
 const partialRight = require('lodash/partialRight');
+/* @endif */
+/* @ifdef NOLODASH **
+const { isFunction, isUndefined, toArray, partialRight } = require('lodash');
+/* @endif */
+
 const invariant = require('invariant');
 const Promise = require('es6-promise').Promise;
 const mopsSymbol = require('./symbol');

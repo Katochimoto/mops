@@ -1,4 +1,9 @@
+/* @ifdef LODASH */
 const cloneDeepWith = require('lodash/cloneDeepWith');
+/* @endif */
+/* @ifdef NOLODASH **
+const { cloneDeepWith } = require('lodash');
+/* @endif */
 const Checked = require('./checked');
 const Operation = require('./operation');
 

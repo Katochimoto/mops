@@ -1,6 +1,11 @@
+/* @ifdef LODASH */
 const castArray = require('lodash/castArray');
 const toArray = require('lodash/toArray');
 const isSet = require('lodash/isSet');
+/* @endif */
+/* @ifdef NOLODASH **
+const { castArray, toArray, isSet } = require('lodash');
+/* @endif */
 const Set = require('es6-set');
 const Map = require('es6-map');
 const mopsSymbol = require('./symbol');

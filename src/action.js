@@ -1,6 +1,11 @@
+/* @ifdef LODASH */
 const isError = require('lodash/isError');
 const isObject = require('lodash/isObject');
 const wrap = require('lodash/wrap');
+/* @endif */
+/* @ifdef NOLODASH **
+const { isError, isObject, wrap } = require('lodash');
+/* @endif */
 const Promise = require('es6-promise').Promise;
 const mopsSymbol = require('./symbol');
 
