@@ -46,10 +46,14 @@ Operation.prototype.size = function (action) {
 };
 
 Operation.prototype.lock = function (action) {
+    const lock = this[ mopsSymbol.ACTION_LOCK ];
+    if (lock.has(action)) {
+        return;
+    }
+
+    lock.add(action);
+
     const oper = this[ mopsSymbol.OPERATION ];
-
-    this[ mopsSymbol.ACTION_LOCK ].add(action);
-
     for (let i = 0; i < oper.length; i++) {
         if (oper[ i ][0] === action) {
             oper.splice(i, 1);

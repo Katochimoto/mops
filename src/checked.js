@@ -1,5 +1,6 @@
 const castArray = require('lodash/castArray');
 const toArray = require('lodash/toArray');
+const isSet = require('lodash/isSet');
 const Set = require('es6-set');
 const Map = require('es6-map');
 const mopsSymbol = require('./symbol');
@@ -12,7 +13,7 @@ module.exports = Checked;
  */
 function Checked(checked) {
     Object.defineProperty(this, mopsSymbol.CHECKED, {
-        value: new Set(Array.isArray(checked) ? checked : [])
+        value: isSet(checked) ? checked : new Set(Array.isArray(checked) ? checked : [])
     });
 }
 
@@ -83,20 +84,23 @@ Checked.prototype.getCheckedGroups = function (getItemGroups) {
     const checked = new Set(this[ mopsSymbol.CHECKED ]);
     const groups = new Map();
 
-    checked.forEach(function mopsCheckedIterator(item) {
-        const itemGroups = castArray(getItemGroups(item) || []);
-        if (itemGroups.length) {
-            itemGroups
-                .map(getSgroup, groups)
-                .forEach(addInSgroup, item);
-        }
-    });
-
+    checked.forEach(wrapCheckedIterator(getItemGroups), groups);
     groups.forEach(groupsIterator, checked);
     groups.clear();
 
-    return new this.constructor(toArray(checked));
+    return new this.constructor(checked);
 };
+
+function wrapCheckedIterator(getItemGroups) {
+    return function checkedIterator(item) {
+        const itemGroups = castArray(getItemGroups(item) || []);
+        if (itemGroups.length) {
+            itemGroups
+                .map(getSgroup, this)
+                .forEach(addInSgroup, item);
+        }
+    };
+}
 
 function groupsIterator(items, group) {
     if (this.has(group)) {
