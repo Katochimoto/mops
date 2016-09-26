@@ -15,25 +15,10 @@ module.exports = Checked;
 
 /**
  * @class
- * @param {array} [checked]
+ * @param {Set|array|*} [checked]
  */
 function Checked(checked) {
-    if (checked) {
-        if (!isSet(checked)) {
-            if (toString(checked) === '[object Set]') {
-                checked = toArray(checked);
-
-            } else if (!Array.isArray(checked)) {
-                checked = [ checked ];
-            }
-
-            checked = new Set(checked);
-        }
-    } else {
-        checked = new Set();
-    }
-
-    Object.defineProperty(this, mopsSymbol.CHECKED, { value: checked });
+    Object.defineProperty(this, mopsSymbol.CHECKED, { value: toSet(checked) });
 }
 
 /**
@@ -144,4 +129,35 @@ function addInSgroup(sgroup) {
 
 function clearFromGroup(item) {
     this.delete(item);
+}
+
+function toSet(data) {
+    if (!data) {
+        return new Set();
+    }
+
+    let out;
+
+    if (isSet(data)) {
+        out = data;
+
+    } else if (toString(data) === '[object Set]') {
+        if (Array.from) {
+            out = new Set(Array.from(data));
+
+        } else if (data.forEach) {
+            out = new Set();
+            data.forEach(function (item) {
+                out.add(item);
+            });
+        }
+
+    } else if (Array.isArray(data)) {
+        out = new Set(data);
+
+    } else {
+        out = new Set([ data ]);
+    }
+
+    return out;
 }
