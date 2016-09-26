@@ -1936,6 +1936,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = Checked;
 
+	var TO_ARRAY_SUPPORT = function () {
+	    return Boolean(toArray(new Set([1])).length);
+	}();
+
+	var setToArray = function () {
+	    return TO_ARRAY_SUPPORT && toArray || function (set) {
+	        var out = [];
+	        set.forEach(function (item) {
+	            return out.push(item);
+	        });
+	        return out;
+	    };
+	}();
+
 	/**
 	 * @class
 	 * @param {Set|array|*} [checked]
@@ -1981,7 +1995,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {array}
 	 */
 	Checked.prototype.toArray = function () {
-	    return toArray(this[mopsSymbol.CHECKED]);
+	    return setToArray(this[mopsSymbol.CHECKED]);
 	};
 
 	/**
@@ -1998,7 +2012,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    });
 
-	    return toArray(groups);
+	    return setToArray(groups);
 	};
 
 	/**
@@ -2060,14 +2074,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (isSet(data)) {
 	        out = data;
 	    } else if (toString(data) === '[object Set]') {
-	        if (Array.from) {
-	            out = new Set(Array.from(data));
-	        } else if (data.forEach) {
-	            out = new Set();
-	            data.forEach(function (item) {
-	                out.add(item);
-	            });
-	        }
+	        out = new Set(setToArray(data));
 	    } else if (Array.isArray(data)) {
 	        out = new Set(data);
 	    } else {

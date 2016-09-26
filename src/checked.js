@@ -13,6 +13,18 @@ const mopsSymbol = require('./symbol');
 
 module.exports = Checked;
 
+const TO_ARRAY_SUPPORT = (function () {
+    return Boolean(toArray(new Set([ 1 ])).length);
+}());
+
+const setToArray = (function () {
+    return TO_ARRAY_SUPPORT && toArray || function (set) {
+        const out = [];
+        set.forEach(item => out.push(item));
+        return out;
+    };
+}());
+
 /**
  * @class
  * @param {Set|array|*} [checked]
@@ -58,7 +70,7 @@ Checked.prototype.size = function () {
  * @returns {array}
  */
 Checked.prototype.toArray = function () {
-    return toArray(this[ mopsSymbol.CHECKED ]);
+    return setToArray(this[ mopsSymbol.CHECKED ]);
 };
 
 /**
@@ -77,7 +89,7 @@ Checked.prototype.getGroups = function (getItemGroups) {
         }
     });
 
-    return toArray(groups);
+    return setToArray(groups);
 };
 
 /**
@@ -142,15 +154,7 @@ function toSet(data) {
         out = data;
 
     } else if (toString(data) === '[object Set]') {
-        if (Array.from) {
-            out = new Set(Array.from(data));
-
-        } else if (data.forEach) {
-            out = new Set();
-            data.forEach(function (item) {
-                out.add(item);
-            });
-        }
+        out = new Set(setToArray(data));
 
     } else if (Array.isArray(data)) {
         out = new Set(data);
