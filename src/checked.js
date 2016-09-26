@@ -13,12 +13,10 @@ const mopsSymbol = require('./symbol');
 
 module.exports = Checked;
 
-const TO_ARRAY_SUPPORT = (function () {
-    return Boolean(toArray(new Set([ 1 ])).length);
-}());
-
 const setToArray = (function () {
-    return TO_ARRAY_SUPPORT && toArray || function (set) {
+    const toArraySupport = Boolean(toArray(new Set([ 1 ])).length);
+
+    return toArraySupport && toArray || function (set) {
         const out = [];
         set.forEach(item => out.push(item));
         return out;
