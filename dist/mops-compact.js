@@ -1928,6 +1928,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var castArray = _require.castArray;
 	var toArray = _require.toArray;
 	var isSet = _require.isSet;
+	var toString = _require.toString;
 
 	var Set = __webpack_require__(30);
 	var Map = __webpack_require__(63);
@@ -1940,9 +1941,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {array} [checked]
 	 */
 	function Checked(checked) {
-	    Object.defineProperty(this, mopsSymbol.CHECKED, {
-	        value: isSet(checked) ? checked : new Set(Array.isArray(checked) ? checked : [checked])
-	    });
+	    if (checked) {
+	        if (!isSet(checked)) {
+	            if (toString(checked) === '[object Set]') {
+	                checked = toArray(checked);
+	            } else if (!Array.isArray(checked)) {
+	                checked = [checked];
+	            }
+
+	            checked = new Set(checked);
+	        }
+	    } else {
+	        checked = new Set();
+	    }
+
+	    Object.defineProperty(this, mopsSymbol.CHECKED, { value: checked });
 	}
 
 	/**

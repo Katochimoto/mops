@@ -2,9 +2,10 @@
 const castArray = require('lodash/castArray');
 const toArray = require('lodash/toArray');
 const isSet = require('lodash/isSet');
+const toString = require('lodash/toString');
 /* @endif */
 /* @ifdef NOLODASH **
-const { castArray, toArray, isSet } = require('lodash');
+const { castArray, toArray, isSet, toString } = require('lodash');
 /* @endif */
 const Set = require('es6-set');
 const Map = require('es6-map');
@@ -17,9 +18,22 @@ module.exports = Checked;
  * @param {array} [checked]
  */
 function Checked(checked) {
-    Object.defineProperty(this, mopsSymbol.CHECKED, {
-        value: isSet(checked) ? checked : new Set(Array.isArray(checked) ? checked : [ checked ])
-    });
+    if (checked) {
+        if (!isSet(checked)) {
+            if (toString(checked) === '[object Set]') {
+                checked = toArray(checked);
+
+            } else if (!Array.isArray(checked)) {
+                checked = [ checked ];
+            }
+
+            checked = new Set(checked);
+        }
+    } else {
+        checked = new Set();
+    }
+
+    Object.defineProperty(this, mopsSymbol.CHECKED, { value: checked });
 }
 
 /**
