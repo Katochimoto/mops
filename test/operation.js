@@ -157,6 +157,46 @@ describe('Operation', function () {
 
             assert.equal(operations.size(action), 0);
         });
+
+        it('действие можно заблокировать по определенному правилу', function () {
+            let action = function () {};
+            let checker = function (param) { return param === 1; };
+            let operations = new mops.Operation();
+
+            operations.lock(action, checker);
+            operations.add(action);
+            operations.add(action, 1);
+
+            assert.equal(operations.size(action), 1);
+        });
+
+        it('при добавлении правила блокировки, оно применяется к текущему списку', function () {
+            let action = function () {};
+            let checker = function (param) { return param === 1; };
+            let operations = new mops.Operation();
+
+            operations.add(action, 1);
+            operations.add(action, 2);
+            operations.add(action, 3);
+            operations.lock(action, checker);
+
+            assert.equal(operations.size(action), 2);
+        });
+
+        it('правила блокировки группируются по действию', function () {
+            let action = function () {};
+            let checker1 = function (param) { return param === 1; };
+            let checker2 = function (param) { return param === 2; };
+            let operations = new mops.Operation();
+
+            operations.lock(action, checker1);
+            operations.lock(action, checker2);
+            operations.add(action, 1);
+            operations.add(action, 2);
+            operations.add(action, 3);
+
+            assert.equal(operations.size(action), 1);
+        });
     });
 
     describe('#unlock', function () {
@@ -168,6 +208,17 @@ describe('Operation', function () {
             operations.unlock(action);
 
             assert.isNotOk(operations.isLock(action));
+        });
+
+        it('если передано правило, должно убрать правило блокировки для действия', function () {
+            let action = function () {};
+            let checker = function () {};
+            let operations = new mops.Operation();
+
+            operations.lock(action, checker);
+            operations.unlock(action, checker);
+
+            assert.isNotOk(operations.isLock(action, checker));
         });
     });
 
@@ -204,6 +255,37 @@ describe('Operation', function () {
             assert.isOk(operations2.isLock(action2));
         });
 
+        it('должно объединить правила блокировки одного действия', function () {
+            let action = function () {};
+            let checker1 = function() {};
+            let checker2 = function() {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.lock(action, checker1);
+            operations2.lock(action, checker2);
+            operations2.merge(operations1);
+
+            assert.isOk(operations2.isLock(action, checker1));
+            assert.isOk(operations2.isLock(action, checker2));
+        });
+
+        it('должно перенести правила блокировки других действий', function () {
+            let action1 = function () {};
+            let checker1 = function() {};
+            let action2 = function () {};
+            let checker2 = function() {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.lock(action1, checker1);
+            operations2.lock(action2, checker2);
+            operations2.merge(operations1);
+
+            assert.isOk(operations2.isLock(action1, checker1));
+            assert.isOk(operations2.isLock(action2, checker2));
+        });
+
         it('должно объединить очереди', function () {
             let action1 = function () {};
             let operations1 = new mops.Operation();
@@ -229,6 +311,19 @@ describe('Operation', function () {
             assert.equal(operations2.size(action1), 0);
         });
 
+        it('объединенная очередь не должна содержить действий удовл. правилам из набора блокировок приемника', function () {
+            let action1 = function () {};
+            let checker1 = function(param) { return param === 1; };
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.add(action1, 1);
+            operations2.lock(action1, checker1);
+            operations2.merge(operations1);
+
+            assert.equal(operations2.size(action1), 0);
+        });
+
         it('объединенная очередь не должна содержить действий из набора блокировок источника', function () {
             let action1 = function () {};
             let action2 = function () {};
@@ -242,6 +337,30 @@ describe('Operation', function () {
 
             operations2.lock(action2);
             operations2.add(action1);
+            operations2.add(action3);
+
+            operations2.merge(operations1);
+
+            assert.equal(operations2.size(action1), 0);
+            assert.equal(operations2.size(action2), 0);
+            assert.equal(operations2.size(action3), 2);
+        });
+
+        it('объединенная очередь не должна содержить действий удовл. правилам из набора блокировок источника', function () {
+            let action1 = function () {};
+            let checker1 = function(param) { return param === 1; };
+            let action2 = function () {};
+            let checker2 = function(param) { return param === 2; };
+            let action3 = function () {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.lock(action1, checker1);
+            operations1.add(action2, 2);
+            operations1.add(action3);
+
+            operations2.lock(action2, checker2);
+            operations2.add(action1, 1);
             operations2.add(action3);
 
             operations2.merge(operations1);
