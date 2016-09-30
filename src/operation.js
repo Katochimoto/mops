@@ -117,15 +117,19 @@ Operation.prototype.merge = function (data) {
     const operSource = data[ mopsSymbol.OPERATION ];
     const lockSource = data[ mopsSymbol.ACTION_LOCK ];
 
-    for (let i = 0; i < oper.length; i++) {
+    let i = 0;
+    while (i < oper.length) {
         const item = oper[ i ];
         if (checkLock(lockSource, item[0], item[1])) {
             oper.splice(i, 1);
+
+        } else {
+            i++;
         }
     }
 
     const lenSource = operSource.length;
-    for (let i = 0; i < lenSource; i++) {
+    for (i = 0; i < lenSource; i++) {
         const item = operSource[ i ];
         if (!checkLock(lock, item[0], item[1])) {
             oper.push(item);

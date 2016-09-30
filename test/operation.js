@@ -311,7 +311,7 @@ describe('Operation', function () {
             assert.equal(operations2.size(action1), 0);
         });
 
-        it('объединенная очередь не должна содержить действий удовл. правилам из набора блокировок приемника', function () {
+        it('объединенная очередь не должна содержить действий, удовл. правилам из набора блокировок приемника', function () {
             let action1 = function () {};
             let checker1 = function(param) { return param === 1; };
             let operations1 = new mops.Operation();
@@ -344,6 +344,22 @@ describe('Operation', function () {
             assert.equal(operations2.size(action1), 0);
             assert.equal(operations2.size(action2), 0);
             assert.equal(operations2.size(action3), 2);
+        });
+
+        it('объединенная очередь не должна содержить ВСЕХ действий из набора блокировок источника', function () {
+            let action1 = function () {};
+            let action2 = function () {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.lock(action1);
+            operations2.add(action1);
+            operations2.add(action1);
+            operations2.add(action2);
+            operations2.merge(operations1);
+
+            assert.equal(operations2.size(action1), 0);
+            assert.equal(operations2.size(action2), 1);
         });
 
         it('объединенная очередь не должна содержить действий удовл. правилам из набора блокировок источника', function () {
