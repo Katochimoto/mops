@@ -57,6 +57,12 @@ var paramsCompact = merge({}, params, {
             'commonjs2': 'lodash',
             'commonjs': 'lodash',
             'amd': 'lodash'
+        },
+        'vow': {
+            'root': 'vow',
+            'commonjs2': 'vow',
+            'commonjs': 'vow',
+            'amd': 'vow'
         }
     },
     'module': {

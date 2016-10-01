@@ -6,7 +6,7 @@ const wrap = require('lodash/wrap');
 /* @ifdef NOLODASH **
 const { isError, isObject, wrap } = require('lodash');
 /* @endif */
-const Promise = require('es6-promise').Promise;
+const { Promise } = require('vow');
 const mopsSymbol = require('./symbol');
 
 module.exports = Action;

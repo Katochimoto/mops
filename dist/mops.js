@@ -57,11 +57,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	exports.Queue = __webpack_require__(1);
-	exports.Action = __webpack_require__(234);
-	exports.Context = __webpack_require__(125);
-	exports.Error = __webpack_require__(238);
-	exports.Checked = __webpack_require__(185);
-	exports.Operation = __webpack_require__(233);
+	exports.Action = __webpack_require__(233);
+	exports.Context = __webpack_require__(123);
+	exports.Error = __webpack_require__(237);
+	exports.Checked = __webpack_require__(184);
+	exports.Operation = __webpack_require__(232);
 
 /***/ },
 /* 1 */
@@ -77,10 +77,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	var partialRight = __webpack_require__(48);
 
 	var invariant = __webpack_require__(100);
-	var Promise = __webpack_require__(102).Promise;
-	var mopsSymbol = __webpack_require__(106);
-	var Context = __webpack_require__(125);
-	var Action = __webpack_require__(234);
+
+	var _require = __webpack_require__(102);
+
+	var Promise = _require.Promise;
+
+	var mopsSymbol = __webpack_require__(104);
+	var Context = __webpack_require__(123);
+	var Action = __webpack_require__(233);
 
 	module.exports = Queue;
 
@@ -3831,1004 +3835,1429 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 102 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var require;var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process, global, module) {/*!
-	 * @overview es6-promise - a tiny implementation of Promises/A+.
-	 * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)
-	 * @license   Licensed under MIT license
-	 *            See https://raw.githubusercontent.com/jakearchibald/es6-promise/master/LICENSE
-	 * @version   3.2.1
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, setImmediate, process) {/**
+	 * @module vow
+	 * @author Filatov Dmitry <dfilatov@yandex-team.ru>
+	 * @version 0.4.12
+	 * @license
+	 * Dual licensed under the MIT and GPL licenses:
+	 *   * http://www.opensource.org/licenses/mit-license.php
+	 *   * http://www.gnu.org/licenses/gpl.html
 	 */
 
-	(function() {
-	    "use strict";
-	    function lib$es6$promise$utils$$objectOrFunction(x) {
-	      return typeof x === 'function' || (typeof x === 'object' && x !== null);
-	    }
-
-	    function lib$es6$promise$utils$$isFunction(x) {
-	      return typeof x === 'function';
-	    }
-
-	    function lib$es6$promise$utils$$isMaybeThenable(x) {
-	      return typeof x === 'object' && x !== null;
-	    }
-
-	    var lib$es6$promise$utils$$_isArray;
-	    if (!Array.isArray) {
-	      lib$es6$promise$utils$$_isArray = function (x) {
-	        return Object.prototype.toString.call(x) === '[object Array]';
-	      };
-	    } else {
-	      lib$es6$promise$utils$$_isArray = Array.isArray;
-	    }
-
-	    var lib$es6$promise$utils$$isArray = lib$es6$promise$utils$$_isArray;
-	    var lib$es6$promise$asap$$len = 0;
-	    var lib$es6$promise$asap$$vertxNext;
-	    var lib$es6$promise$asap$$customSchedulerFn;
-
-	    var lib$es6$promise$asap$$asap = function asap(callback, arg) {
-	      lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len] = callback;
-	      lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len + 1] = arg;
-	      lib$es6$promise$asap$$len += 2;
-	      if (lib$es6$promise$asap$$len === 2) {
-	        // If len is 2, that means that we need to schedule an async flush.
-	        // If additional callbacks are queued before the queue is flushed, they
-	        // will be processed by this flush that we are scheduling.
-	        if (lib$es6$promise$asap$$customSchedulerFn) {
-	          lib$es6$promise$asap$$customSchedulerFn(lib$es6$promise$asap$$flush);
-	        } else {
-	          lib$es6$promise$asap$$scheduleFlush();
-	        }
-	      }
-	    }
-
-	    function lib$es6$promise$asap$$setScheduler(scheduleFn) {
-	      lib$es6$promise$asap$$customSchedulerFn = scheduleFn;
-	    }
-
-	    function lib$es6$promise$asap$$setAsap(asapFn) {
-	      lib$es6$promise$asap$$asap = asapFn;
-	    }
-
-	    var lib$es6$promise$asap$$browserWindow = (typeof window !== 'undefined') ? window : undefined;
-	    var lib$es6$promise$asap$$browserGlobal = lib$es6$promise$asap$$browserWindow || {};
-	    var lib$es6$promise$asap$$BrowserMutationObserver = lib$es6$promise$asap$$browserGlobal.MutationObserver || lib$es6$promise$asap$$browserGlobal.WebKitMutationObserver;
-	    var lib$es6$promise$asap$$isNode = typeof self === 'undefined' && typeof process !== 'undefined' && {}.toString.call(process) === '[object process]';
-
-	    // test for web worker but not in IE10
-	    var lib$es6$promise$asap$$isWorker = typeof Uint8ClampedArray !== 'undefined' &&
-	      typeof importScripts !== 'undefined' &&
-	      typeof MessageChannel !== 'undefined';
-
-	    // node
-	    function lib$es6$promise$asap$$useNextTick() {
-	      // node version 0.10.x displays a deprecation warning when nextTick is used recursively
-	      // see https://github.com/cujojs/when/issues/410 for details
-	      return function() {
-	        process.nextTick(lib$es6$promise$asap$$flush);
-	      };
-	    }
-
-	    // vertx
-	    function lib$es6$promise$asap$$useVertxTimer() {
-	      return function() {
-	        lib$es6$promise$asap$$vertxNext(lib$es6$promise$asap$$flush);
-	      };
-	    }
-
-	    function lib$es6$promise$asap$$useMutationObserver() {
-	      var iterations = 0;
-	      var observer = new lib$es6$promise$asap$$BrowserMutationObserver(lib$es6$promise$asap$$flush);
-	      var node = document.createTextNode('');
-	      observer.observe(node, { characterData: true });
-
-	      return function() {
-	        node.data = (iterations = ++iterations % 2);
-	      };
-	    }
-
-	    // web worker
-	    function lib$es6$promise$asap$$useMessageChannel() {
-	      var channel = new MessageChannel();
-	      channel.port1.onmessage = lib$es6$promise$asap$$flush;
-	      return function () {
-	        channel.port2.postMessage(0);
-	      };
-	    }
-
-	    function lib$es6$promise$asap$$useSetTimeout() {
-	      return function() {
-	        setTimeout(lib$es6$promise$asap$$flush, 1);
-	      };
-	    }
-
-	    var lib$es6$promise$asap$$queue = new Array(1000);
-	    function lib$es6$promise$asap$$flush() {
-	      for (var i = 0; i < lib$es6$promise$asap$$len; i+=2) {
-	        var callback = lib$es6$promise$asap$$queue[i];
-	        var arg = lib$es6$promise$asap$$queue[i+1];
-
-	        callback(arg);
-
-	        lib$es6$promise$asap$$queue[i] = undefined;
-	        lib$es6$promise$asap$$queue[i+1] = undefined;
-	      }
-
-	      lib$es6$promise$asap$$len = 0;
-	    }
-
-	    function lib$es6$promise$asap$$attemptVertx() {
-	      try {
-	        var r = require;
-	        var vertx = __webpack_require__(104);
-	        lib$es6$promise$asap$$vertxNext = vertx.runOnLoop || vertx.runOnContext;
-	        return lib$es6$promise$asap$$useVertxTimer();
-	      } catch(e) {
-	        return lib$es6$promise$asap$$useSetTimeout();
-	      }
-	    }
-
-	    var lib$es6$promise$asap$$scheduleFlush;
-	    // Decide what async method to use to triggering processing of queued callbacks:
-	    if (lib$es6$promise$asap$$isNode) {
-	      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useNextTick();
-	    } else if (lib$es6$promise$asap$$BrowserMutationObserver) {
-	      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useMutationObserver();
-	    } else if (lib$es6$promise$asap$$isWorker) {
-	      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useMessageChannel();
-	    } else if (lib$es6$promise$asap$$browserWindow === undefined && "function" === 'function') {
-	      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$attemptVertx();
-	    } else {
-	      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useSetTimeout();
-	    }
-	    function lib$es6$promise$then$$then(onFulfillment, onRejection) {
-	      var parent = this;
-
-	      var child = new this.constructor(lib$es6$promise$$internal$$noop);
-
-	      if (child[lib$es6$promise$$internal$$PROMISE_ID] === undefined) {
-	        lib$es6$promise$$internal$$makePromise(child);
-	      }
-
-	      var state = parent._state;
-
-	      if (state) {
-	        var callback = arguments[state - 1];
-	        lib$es6$promise$asap$$asap(function(){
-	          lib$es6$promise$$internal$$invokeCallback(state, child, callback, parent._result);
-	        });
-	      } else {
-	        lib$es6$promise$$internal$$subscribe(parent, child, onFulfillment, onRejection);
-	      }
-
-	      return child;
-	    }
-	    var lib$es6$promise$then$$default = lib$es6$promise$then$$then;
-	    function lib$es6$promise$promise$resolve$$resolve(object) {
-	      /*jshint validthis:true */
-	      var Constructor = this;
-
-	      if (object && typeof object === 'object' && object.constructor === Constructor) {
-	        return object;
-	      }
-
-	      var promise = new Constructor(lib$es6$promise$$internal$$noop);
-	      lib$es6$promise$$internal$$resolve(promise, object);
-	      return promise;
-	    }
-	    var lib$es6$promise$promise$resolve$$default = lib$es6$promise$promise$resolve$$resolve;
-	    var lib$es6$promise$$internal$$PROMISE_ID = Math.random().toString(36).substring(16);
-
-	    function lib$es6$promise$$internal$$noop() {}
-
-	    var lib$es6$promise$$internal$$PENDING   = void 0;
-	    var lib$es6$promise$$internal$$FULFILLED = 1;
-	    var lib$es6$promise$$internal$$REJECTED  = 2;
-
-	    var lib$es6$promise$$internal$$GET_THEN_ERROR = new lib$es6$promise$$internal$$ErrorObject();
-
-	    function lib$es6$promise$$internal$$selfFulfillment() {
-	      return new TypeError("You cannot resolve a promise with itself");
-	    }
-
-	    function lib$es6$promise$$internal$$cannotReturnOwn() {
-	      return new TypeError('A promises callback cannot return that same promise.');
-	    }
-
-	    function lib$es6$promise$$internal$$getThen(promise) {
-	      try {
-	        return promise.then;
-	      } catch(error) {
-	        lib$es6$promise$$internal$$GET_THEN_ERROR.error = error;
-	        return lib$es6$promise$$internal$$GET_THEN_ERROR;
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$tryThen(then, value, fulfillmentHandler, rejectionHandler) {
-	      try {
-	        then.call(value, fulfillmentHandler, rejectionHandler);
-	      } catch(e) {
-	        return e;
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$handleForeignThenable(promise, thenable, then) {
-	       lib$es6$promise$asap$$asap(function(promise) {
-	        var sealed = false;
-	        var error = lib$es6$promise$$internal$$tryThen(then, thenable, function(value) {
-	          if (sealed) { return; }
-	          sealed = true;
-	          if (thenable !== value) {
-	            lib$es6$promise$$internal$$resolve(promise, value);
-	          } else {
-	            lib$es6$promise$$internal$$fulfill(promise, value);
-	          }
-	        }, function(reason) {
-	          if (sealed) { return; }
-	          sealed = true;
-
-	          lib$es6$promise$$internal$$reject(promise, reason);
-	        }, 'Settle: ' + (promise._label || ' unknown promise'));
-
-	        if (!sealed && error) {
-	          sealed = true;
-	          lib$es6$promise$$internal$$reject(promise, error);
-	        }
-	      }, promise);
-	    }
-
-	    function lib$es6$promise$$internal$$handleOwnThenable(promise, thenable) {
-	      if (thenable._state === lib$es6$promise$$internal$$FULFILLED) {
-	        lib$es6$promise$$internal$$fulfill(promise, thenable._result);
-	      } else if (thenable._state === lib$es6$promise$$internal$$REJECTED) {
-	        lib$es6$promise$$internal$$reject(promise, thenable._result);
-	      } else {
-	        lib$es6$promise$$internal$$subscribe(thenable, undefined, function(value) {
-	          lib$es6$promise$$internal$$resolve(promise, value);
-	        }, function(reason) {
-	          lib$es6$promise$$internal$$reject(promise, reason);
-	        });
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$handleMaybeThenable(promise, maybeThenable, then) {
-	      if (maybeThenable.constructor === promise.constructor &&
-	          then === lib$es6$promise$then$$default &&
-	          constructor.resolve === lib$es6$promise$promise$resolve$$default) {
-	        lib$es6$promise$$internal$$handleOwnThenable(promise, maybeThenable);
-	      } else {
-	        if (then === lib$es6$promise$$internal$$GET_THEN_ERROR) {
-	          lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$GET_THEN_ERROR.error);
-	        } else if (then === undefined) {
-	          lib$es6$promise$$internal$$fulfill(promise, maybeThenable);
-	        } else if (lib$es6$promise$utils$$isFunction(then)) {
-	          lib$es6$promise$$internal$$handleForeignThenable(promise, maybeThenable, then);
-	        } else {
-	          lib$es6$promise$$internal$$fulfill(promise, maybeThenable);
-	        }
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$resolve(promise, value) {
-	      if (promise === value) {
-	        lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$selfFulfillment());
-	      } else if (lib$es6$promise$utils$$objectOrFunction(value)) {
-	        lib$es6$promise$$internal$$handleMaybeThenable(promise, value, lib$es6$promise$$internal$$getThen(value));
-	      } else {
-	        lib$es6$promise$$internal$$fulfill(promise, value);
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$publishRejection(promise) {
-	      if (promise._onerror) {
-	        promise._onerror(promise._result);
-	      }
-
-	      lib$es6$promise$$internal$$publish(promise);
-	    }
-
-	    function lib$es6$promise$$internal$$fulfill(promise, value) {
-	      if (promise._state !== lib$es6$promise$$internal$$PENDING) { return; }
-
-	      promise._result = value;
-	      promise._state = lib$es6$promise$$internal$$FULFILLED;
-
-	      if (promise._subscribers.length !== 0) {
-	        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, promise);
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$reject(promise, reason) {
-	      if (promise._state !== lib$es6$promise$$internal$$PENDING) { return; }
-	      promise._state = lib$es6$promise$$internal$$REJECTED;
-	      promise._result = reason;
-
-	      lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publishRejection, promise);
-	    }
-
-	    function lib$es6$promise$$internal$$subscribe(parent, child, onFulfillment, onRejection) {
-	      var subscribers = parent._subscribers;
-	      var length = subscribers.length;
-
-	      parent._onerror = null;
-
-	      subscribers[length] = child;
-	      subscribers[length + lib$es6$promise$$internal$$FULFILLED] = onFulfillment;
-	      subscribers[length + lib$es6$promise$$internal$$REJECTED]  = onRejection;
-
-	      if (length === 0 && parent._state) {
-	        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, parent);
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$publish(promise) {
-	      var subscribers = promise._subscribers;
-	      var settled = promise._state;
-
-	      if (subscribers.length === 0) { return; }
-
-	      var child, callback, detail = promise._result;
-
-	      for (var i = 0; i < subscribers.length; i += 3) {
-	        child = subscribers[i];
-	        callback = subscribers[i + settled];
-
-	        if (child) {
-	          lib$es6$promise$$internal$$invokeCallback(settled, child, callback, detail);
-	        } else {
-	          callback(detail);
-	        }
-	      }
-
-	      promise._subscribers.length = 0;
-	    }
-
-	    function lib$es6$promise$$internal$$ErrorObject() {
-	      this.error = null;
-	    }
-
-	    var lib$es6$promise$$internal$$TRY_CATCH_ERROR = new lib$es6$promise$$internal$$ErrorObject();
-
-	    function lib$es6$promise$$internal$$tryCatch(callback, detail) {
-	      try {
-	        return callback(detail);
-	      } catch(e) {
-	        lib$es6$promise$$internal$$TRY_CATCH_ERROR.error = e;
-	        return lib$es6$promise$$internal$$TRY_CATCH_ERROR;
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$invokeCallback(settled, promise, callback, detail) {
-	      var hasCallback = lib$es6$promise$utils$$isFunction(callback),
-	          value, error, succeeded, failed;
-
-	      if (hasCallback) {
-	        value = lib$es6$promise$$internal$$tryCatch(callback, detail);
-
-	        if (value === lib$es6$promise$$internal$$TRY_CATCH_ERROR) {
-	          failed = true;
-	          error = value.error;
-	          value = null;
-	        } else {
-	          succeeded = true;
-	        }
-
-	        if (promise === value) {
-	          lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$cannotReturnOwn());
-	          return;
-	        }
-
-	      } else {
-	        value = detail;
-	        succeeded = true;
-	      }
-
-	      if (promise._state !== lib$es6$promise$$internal$$PENDING) {
-	        // noop
-	      } else if (hasCallback && succeeded) {
-	        lib$es6$promise$$internal$$resolve(promise, value);
-	      } else if (failed) {
-	        lib$es6$promise$$internal$$reject(promise, error);
-	      } else if (settled === lib$es6$promise$$internal$$FULFILLED) {
-	        lib$es6$promise$$internal$$fulfill(promise, value);
-	      } else if (settled === lib$es6$promise$$internal$$REJECTED) {
-	        lib$es6$promise$$internal$$reject(promise, value);
-	      }
-	    }
-
-	    function lib$es6$promise$$internal$$initializePromise(promise, resolver) {
-	      try {
-	        resolver(function resolvePromise(value){
-	          lib$es6$promise$$internal$$resolve(promise, value);
-	        }, function rejectPromise(reason) {
-	          lib$es6$promise$$internal$$reject(promise, reason);
-	        });
-	      } catch(e) {
-	        lib$es6$promise$$internal$$reject(promise, e);
-	      }
-	    }
-
-	    var lib$es6$promise$$internal$$id = 0;
-	    function lib$es6$promise$$internal$$nextId() {
-	      return lib$es6$promise$$internal$$id++;
-	    }
-
-	    function lib$es6$promise$$internal$$makePromise(promise) {
-	      promise[lib$es6$promise$$internal$$PROMISE_ID] = lib$es6$promise$$internal$$id++;
-	      promise._state = undefined;
-	      promise._result = undefined;
-	      promise._subscribers = [];
-	    }
-
-	    function lib$es6$promise$promise$all$$all(entries) {
-	      return new lib$es6$promise$enumerator$$default(this, entries).promise;
-	    }
-	    var lib$es6$promise$promise$all$$default = lib$es6$promise$promise$all$$all;
-	    function lib$es6$promise$promise$race$$race(entries) {
-	      /*jshint validthis:true */
-	      var Constructor = this;
-
-	      if (!lib$es6$promise$utils$$isArray(entries)) {
-	        return new Constructor(function(resolve, reject) {
-	          reject(new TypeError('You must pass an array to race.'));
-	        });
-	      } else {
-	        return new Constructor(function(resolve, reject) {
-	          var length = entries.length;
-	          for (var i = 0; i < length; i++) {
-	            Constructor.resolve(entries[i]).then(resolve, reject);
-	          }
-	        });
-	      }
-	    }
-	    var lib$es6$promise$promise$race$$default = lib$es6$promise$promise$race$$race;
-	    function lib$es6$promise$promise$reject$$reject(reason) {
-	      /*jshint validthis:true */
-	      var Constructor = this;
-	      var promise = new Constructor(lib$es6$promise$$internal$$noop);
-	      lib$es6$promise$$internal$$reject(promise, reason);
-	      return promise;
-	    }
-	    var lib$es6$promise$promise$reject$$default = lib$es6$promise$promise$reject$$reject;
-
-
-	    function lib$es6$promise$promise$$needsResolver() {
-	      throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
-	    }
-
-	    function lib$es6$promise$promise$$needsNew() {
-	      throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
-	    }
-
-	    var lib$es6$promise$promise$$default = lib$es6$promise$promise$$Promise;
-	    /**
-	      Promise objects represent the eventual result of an asynchronous operation. The
-	      primary way of interacting with a promise is through its `then` method, which
-	      registers callbacks to receive either a promise's eventual value or the reason
-	      why the promise cannot be fulfilled.
-
-	      Terminology
-	      -----------
-
-	      - `promise` is an object or function with a `then` method whose behavior conforms to this specification.
-	      - `thenable` is an object or function that defines a `then` method.
-	      - `value` is any legal JavaScript value (including undefined, a thenable, or a promise).
-	      - `exception` is a value that is thrown using the throw statement.
-	      - `reason` is a value that indicates why a promise was rejected.
-	      - `settled` the final resting state of a promise, fulfilled or rejected.
-
-	      A promise can be in one of three states: pending, fulfilled, or rejected.
-
-	      Promises that are fulfilled have a fulfillment value and are in the fulfilled
-	      state.  Promises that are rejected have a rejection reason and are in the
-	      rejected state.  A fulfillment value is never a thenable.
-
-	      Promises can also be said to *resolve* a value.  If this value is also a
-	      promise, then the original promise's settled state will match the value's
-	      settled state.  So a promise that *resolves* a promise that rejects will
-	      itself reject, and a promise that *resolves* a promise that fulfills will
-	      itself fulfill.
-
-
-	      Basic Usage:
-	      ------------
-
-	      ```js
-	      var promise = new Promise(function(resolve, reject) {
-	        // on success
-	        resolve(value);
-
-	        // on failure
-	        reject(reason);
-	      });
-
-	      promise.then(function(value) {
-	        // on fulfillment
-	      }, function(reason) {
-	        // on rejection
-	      });
-	      ```
-
-	      Advanced Usage:
-	      ---------------
-
-	      Promises shine when abstracting away asynchronous interactions such as
-	      `XMLHttpRequest`s.
-
-	      ```js
-	      function getJSON(url) {
-	        return new Promise(function(resolve, reject){
-	          var xhr = new XMLHttpRequest();
-
-	          xhr.open('GET', url);
-	          xhr.onreadystatechange = handler;
-	          xhr.responseType = 'json';
-	          xhr.setRequestHeader('Accept', 'application/json');
-	          xhr.send();
-
-	          function handler() {
-	            if (this.readyState === this.DONE) {
-	              if (this.status === 200) {
-	                resolve(this.response);
-	              } else {
-	                reject(new Error('getJSON: `' + url + '` failed with status: [' + this.status + ']'));
-	              }
-	            }
-	          };
-	        });
-	      }
-
-	      getJSON('/posts.json').then(function(json) {
-	        // on fulfillment
-	      }, function(reason) {
-	        // on rejection
-	      });
-	      ```
-
-	      Unlike callbacks, promises are great composable primitives.
-
-	      ```js
-	      Promise.all([
-	        getJSON('/posts'),
-	        getJSON('/comments')
-	      ]).then(function(values){
-	        values[0] // => postsJSON
-	        values[1] // => commentsJSON
-
-	        return values;
-	      });
-	      ```
-
-	      @class Promise
-	      @param {function} resolver
-	      Useful for tooling.
-	      @constructor
-	    */
-	    function lib$es6$promise$promise$$Promise(resolver) {
-	      this[lib$es6$promise$$internal$$PROMISE_ID] = lib$es6$promise$$internal$$nextId();
-	      this._result = this._state = undefined;
-	      this._subscribers = [];
-
-	      if (lib$es6$promise$$internal$$noop !== resolver) {
-	        typeof resolver !== 'function' && lib$es6$promise$promise$$needsResolver();
-	        this instanceof lib$es6$promise$promise$$Promise ? lib$es6$promise$$internal$$initializePromise(this, resolver) : lib$es6$promise$promise$$needsNew();
-	      }
-	    }
-
-	    lib$es6$promise$promise$$Promise.all = lib$es6$promise$promise$all$$default;
-	    lib$es6$promise$promise$$Promise.race = lib$es6$promise$promise$race$$default;
-	    lib$es6$promise$promise$$Promise.resolve = lib$es6$promise$promise$resolve$$default;
-	    lib$es6$promise$promise$$Promise.reject = lib$es6$promise$promise$reject$$default;
-	    lib$es6$promise$promise$$Promise._setScheduler = lib$es6$promise$asap$$setScheduler;
-	    lib$es6$promise$promise$$Promise._setAsap = lib$es6$promise$asap$$setAsap;
-	    lib$es6$promise$promise$$Promise._asap = lib$es6$promise$asap$$asap;
-
-	    lib$es6$promise$promise$$Promise.prototype = {
-	      constructor: lib$es6$promise$promise$$Promise,
-
-	    /**
-	      The primary way of interacting with a promise is through its `then` method,
-	      which registers callbacks to receive either a promise's eventual value or the
-	      reason why the promise cannot be fulfilled.
-
-	      ```js
-	      findUser().then(function(user){
-	        // user is available
-	      }, function(reason){
-	        // user is unavailable, and you are given the reason why
-	      });
-	      ```
-
-	      Chaining
-	      --------
-
-	      The return value of `then` is itself a promise.  This second, 'downstream'
-	      promise is resolved with the return value of the first promise's fulfillment
-	      or rejection handler, or rejected if the handler throws an exception.
-
-	      ```js
-	      findUser().then(function (user) {
-	        return user.name;
-	      }, function (reason) {
-	        return 'default name';
-	      }).then(function (userName) {
-	        // If `findUser` fulfilled, `userName` will be the user's name, otherwise it
-	        // will be `'default name'`
-	      });
-
-	      findUser().then(function (user) {
-	        throw new Error('Found user, but still unhappy');
-	      }, function (reason) {
-	        throw new Error('`findUser` rejected and we're unhappy');
-	      }).then(function (value) {
-	        // never reached
-	      }, function (reason) {
-	        // if `findUser` fulfilled, `reason` will be 'Found user, but still unhappy'.
-	        // If `findUser` rejected, `reason` will be '`findUser` rejected and we're unhappy'.
-	      });
-	      ```
-	      If the downstream promise does not specify a rejection handler, rejection reasons will be propagated further downstream.
-
-	      ```js
-	      findUser().then(function (user) {
-	        throw new PedagogicalException('Upstream error');
-	      }).then(function (value) {
-	        // never reached
-	      }).then(function (value) {
-	        // never reached
-	      }, function (reason) {
-	        // The `PedgagocialException` is propagated all the way down to here
-	      });
-	      ```
-
-	      Assimilation
-	      ------------
-
-	      Sometimes the value you want to propagate to a downstream promise can only be
-	      retrieved asynchronously. This can be achieved by returning a promise in the
-	      fulfillment or rejection handler. The downstream promise will then be pending
-	      until the returned promise is settled. This is called *assimilation*.
-
-	      ```js
-	      findUser().then(function (user) {
-	        return findCommentsByAuthor(user);
-	      }).then(function (comments) {
-	        // The user's comments are now available
-	      });
-	      ```
-
-	      If the assimliated promise rejects, then the downstream promise will also reject.
-
-	      ```js
-	      findUser().then(function (user) {
-	        return findCommentsByAuthor(user);
-	      }).then(function (comments) {
-	        // If `findCommentsByAuthor` fulfills, we'll have the value here
-	      }, function (reason) {
-	        // If `findCommentsByAuthor` rejects, we'll have the reason here
-	      });
-	      ```
-
-	      Simple Example
-	      --------------
-
-	      Synchronous Example
-
-	      ```javascript
-	      var result;
-
-	      try {
-	        result = findResult();
-	        // success
-	      } catch(reason) {
-	        // failure
-	      }
-	      ```
-
-	      Errback Example
-
-	      ```js
-	      findResult(function(result, err){
-	        if (err) {
-	          // failure
-	        } else {
-	          // success
-	        }
-	      });
-	      ```
-
-	      Promise Example;
-
-	      ```javascript
-	      findResult().then(function(result){
-	        // success
-	      }, function(reason){
-	        // failure
-	      });
-	      ```
-
-	      Advanced Example
-	      --------------
-
-	      Synchronous Example
-
-	      ```javascript
-	      var author, books;
-
-	      try {
-	        author = findAuthor();
-	        books  = findBooksByAuthor(author);
-	        // success
-	      } catch(reason) {
-	        // failure
-	      }
-	      ```
-
-	      Errback Example
-
-	      ```js
-
-	      function foundBooks(books) {
-
-	      }
-
-	      function failure(reason) {
-
-	      }
-
-	      findAuthor(function(author, err){
-	        if (err) {
-	          failure(err);
-	          // failure
-	        } else {
-	          try {
-	            findBoooksByAuthor(author, function(books, err) {
-	              if (err) {
-	                failure(err);
-	              } else {
-	                try {
-	                  foundBooks(books);
-	                } catch(reason) {
-	                  failure(reason);
+	(function(global) {
+
+	var undef,
+	    nextTick = (function() {
+	        var fns = [],
+	            enqueueFn = function(fn) {
+	                return fns.push(fn) === 1;
+	            },
+	            callFns = function() {
+	                var fnsToCall = fns, i = 0, len = fns.length;
+	                fns = [];
+	                while(i < len) {
+	                    fnsToCall[i++]();
 	                }
-	              }
-	            });
-	          } catch(error) {
-	            failure(err);
-	          }
-	          // success
+	            };
+
+	        if(typeof setImmediate === 'function') { // ie10, nodejs >= 0.10
+	            return function(fn) {
+	                enqueueFn(fn) && setImmediate(callFns);
+	            };
 	        }
-	      });
-	      ```
 
-	      Promise Example;
+	        if(typeof process === 'object' && process.nextTick) { // nodejs < 0.10
+	            return function(fn) {
+	                enqueueFn(fn) && process.nextTick(callFns);
+	            };
+	        }
 
-	      ```javascript
-	      findAuthor().
-	        then(findBooksByAuthor).
-	        then(function(books){
-	          // found books
-	      }).catch(function(reason){
-	        // something went wrong
-	      });
-	      ```
+	        var MutationObserver = global.MutationObserver || global.WebKitMutationObserver; // modern browsers
+	        if(MutationObserver) {
+	            var num = 1,
+	                node = document.createTextNode('');
 
-	      @method then
-	      @param {Function} onFulfilled
-	      @param {Function} onRejected
-	      Useful for tooling.
-	      @return {Promise}
-	    */
-	      then: lib$es6$promise$then$$default,
+	            new MutationObserver(callFns).observe(node, { characterData : true });
+
+	            return function(fn) {
+	                enqueueFn(fn) && (node.data = (num *= -1));
+	            };
+	        }
+
+	        if(global.postMessage) {
+	            var isPostMessageAsync = true;
+	            if(global.attachEvent) {
+	                var checkAsync = function() {
+	                        isPostMessageAsync = false;
+	                    };
+	                global.attachEvent('onmessage', checkAsync);
+	                global.postMessage('__checkAsync', '*');
+	                global.detachEvent('onmessage', checkAsync);
+	            }
+
+	            if(isPostMessageAsync) {
+	                var msg = '__promise' + Math.random() + '_' +new Date,
+	                    onMessage = function(e) {
+	                        if(e.data === msg) {
+	                            e.stopPropagation && e.stopPropagation();
+	                            callFns();
+	                        }
+	                    };
+
+	                global.addEventListener?
+	                    global.addEventListener('message', onMessage, true) :
+	                    global.attachEvent('onmessage', onMessage);
+
+	                return function(fn) {
+	                    enqueueFn(fn) && global.postMessage(msg, '*');
+	                };
+	            }
+	        }
+
+	        var doc = global.document;
+	        if('onreadystatechange' in doc.createElement('script')) { // ie6-ie8
+	            var createScript = function() {
+	                    var script = doc.createElement('script');
+	                    script.onreadystatechange = function() {
+	                        script.parentNode.removeChild(script);
+	                        script = script.onreadystatechange = null;
+	                        callFns();
+	                };
+	                (doc.documentElement || doc.body).appendChild(script);
+	            };
+
+	            return function(fn) {
+	                enqueueFn(fn) && createScript();
+	            };
+	        }
+
+	        return function(fn) { // old browsers
+	            enqueueFn(fn) && setTimeout(callFns, 0);
+	        };
+	    })(),
+	    throwException = function(e) {
+	        nextTick(function() {
+	            throw e;
+	        });
+	    },
+	    isFunction = function(obj) {
+	        return typeof obj === 'function';
+	    },
+	    isObject = function(obj) {
+	        return obj !== null && typeof obj === 'object';
+	    },
+	    toStr = Object.prototype.toString,
+	    isArray = Array.isArray || function(obj) {
+	        return toStr.call(obj) === '[object Array]';
+	    },
+	    getArrayKeys = function(arr) {
+	        var res = [],
+	            i = 0, len = arr.length;
+	        while(i < len) {
+	            res.push(i++);
+	        }
+	        return res;
+	    },
+	    getObjectKeys = Object.keys || function(obj) {
+	        var res = [];
+	        for(var i in obj) {
+	            obj.hasOwnProperty(i) && res.push(i);
+	        }
+	        return res;
+	    },
+	    defineCustomErrorType = function(name) {
+	        var res = function(message) {
+	            this.name = name;
+	            this.message = message;
+	        };
+
+	        res.prototype = new Error();
+
+	        return res;
+	    },
+	    wrapOnFulfilled = function(onFulfilled, idx) {
+	        return function(val) {
+	            onFulfilled.call(this, val, idx);
+	        };
+	    };
+
+	/**
+	 * @class Deferred
+	 * @exports vow:Deferred
+	 * @description
+	 * The `Deferred` class is used to encapsulate newly-created promise object along with functions that resolve, reject or notify it.
+	 */
+
+	/**
+	 * @constructor
+	 * @description
+	 * You can use `vow.defer()` instead of using this constructor.
+	 *
+	 * `new vow.Deferred()` gives the same result as `vow.defer()`.
+	 */
+	var Deferred = function() {
+	    this._promise = new Promise();
+	};
+
+	Deferred.prototype = /** @lends Deferred.prototype */{
+	    /**
+	     * Returns the corresponding promise.
+	     *
+	     * @returns {vow:Promise}
+	     */
+	    promise : function() {
+	        return this._promise;
+	    },
 
 	    /**
-	      `catch` is simply sugar for `then(undefined, onRejection)` which makes it the same
-	      as the catch block of a try/catch statement.
+	     * Resolves the corresponding promise with the given `value`.
+	     *
+	     * @param {*} value
+	     *
+	     * @example
+	     * ```js
+	     * var defer = vow.defer(),
+	     *     promise = defer.promise();
+	     *
+	     * promise.then(function(value) {
+	     *     // value is "'success'" here
+	     * });
+	     *
+	     * defer.resolve('success');
+	     * ```
+	     */
+	    resolve : function(value) {
+	        this._promise.isResolved() || this._promise._resolve(value);
+	    },
 
-	      ```js
-	      function findAuthor(){
-	        throw new Error('couldn't find that author');
-	      }
-
-	      // synchronous
-	      try {
-	        findAuthor();
-	      } catch(reason) {
-	        // something went wrong
-	      }
-
-	      // async with promises
-	      findAuthor().catch(function(reason){
-	        // something went wrong
-	      });
-	      ```
-
-	      @method catch
-	      @param {Function} onRejection
-	      Useful for tooling.
-	      @return {Promise}
-	    */
-	      'catch': function(onRejection) {
-	        return this.then(null, onRejection);
-	      }
-	    };
-	    var lib$es6$promise$enumerator$$default = lib$es6$promise$enumerator$$Enumerator;
-	    function lib$es6$promise$enumerator$$Enumerator(Constructor, input) {
-	      this._instanceConstructor = Constructor;
-	      this.promise = new Constructor(lib$es6$promise$$internal$$noop);
-
-	      if (!this.promise[lib$es6$promise$$internal$$PROMISE_ID]) {
-	        lib$es6$promise$$internal$$makePromise(this.promise);
-	      }
-
-	      if (lib$es6$promise$utils$$isArray(input)) {
-	        this._input     = input;
-	        this.length     = input.length;
-	        this._remaining = input.length;
-
-	        this._result = new Array(this.length);
-
-	        if (this.length === 0) {
-	          lib$es6$promise$$internal$$fulfill(this.promise, this._result);
-	        } else {
-	          this.length = this.length || 0;
-	          this._enumerate();
-	          if (this._remaining === 0) {
-	            lib$es6$promise$$internal$$fulfill(this.promise, this._result);
-	          }
+	    /**
+	     * Rejects the corresponding promise with the given `reason`.
+	     *
+	     * @param {*} reason
+	     *
+	     * @example
+	     * ```js
+	     * var defer = vow.defer(),
+	     *     promise = defer.promise();
+	     *
+	     * promise.fail(function(reason) {
+	     *     // reason is "'something is wrong'" here
+	     * });
+	     *
+	     * defer.reject('something is wrong');
+	     * ```
+	     */
+	    reject : function(reason) {
+	        if(this._promise.isResolved()) {
+	            return;
 	        }
-	      } else {
-	        lib$es6$promise$$internal$$reject(this.promise, lib$es6$promise$enumerator$$validationError());
-	      }
-	    }
 
-	    function lib$es6$promise$enumerator$$validationError() {
-	      return new Error('Array Methods must be provided an Array');
-	    }
-
-	    lib$es6$promise$enumerator$$Enumerator.prototype._enumerate = function() {
-	      var length  = this.length;
-	      var input   = this._input;
-
-	      for (var i = 0; this._state === lib$es6$promise$$internal$$PENDING && i < length; i++) {
-	        this._eachEntry(input[i], i);
-	      }
-	    };
-
-	    lib$es6$promise$enumerator$$Enumerator.prototype._eachEntry = function(entry, i) {
-	      var c = this._instanceConstructor;
-	      var resolve = c.resolve;
-
-	      if (resolve === lib$es6$promise$promise$resolve$$default) {
-	        var then = lib$es6$promise$$internal$$getThen(entry);
-
-	        if (then === lib$es6$promise$then$$default &&
-	            entry._state !== lib$es6$promise$$internal$$PENDING) {
-	          this._settledAt(entry._state, i, entry._result);
-	        } else if (typeof then !== 'function') {
-	          this._remaining--;
-	          this._result[i] = entry;
-	        } else if (c === lib$es6$promise$promise$$default) {
-	          var promise = new c(lib$es6$promise$$internal$$noop);
-	          lib$es6$promise$$internal$$handleMaybeThenable(promise, entry, then);
-	          this._willSettleAt(promise, i);
-	        } else {
-	          this._willSettleAt(new c(function(resolve) { resolve(entry); }), i);
+	        if(vow.isPromise(reason)) {
+	            reason = reason.then(function(val) {
+	                var defer = vow.defer();
+	                defer.reject(val);
+	                return defer.promise();
+	            });
+	            this._promise._resolve(reason);
 	        }
-	      } else {
-	        this._willSettleAt(resolve(entry), i);
-	      }
-	    };
-
-	    lib$es6$promise$enumerator$$Enumerator.prototype._settledAt = function(state, i, value) {
-	      var promise = this.promise;
-
-	      if (promise._state === lib$es6$promise$$internal$$PENDING) {
-	        this._remaining--;
-
-	        if (state === lib$es6$promise$$internal$$REJECTED) {
-	          lib$es6$promise$$internal$$reject(promise, value);
-	        } else {
-	          this._result[i] = value;
+	        else {
+	            this._promise._reject(reason);
 	        }
-	      }
+	    },
 
-	      if (this._remaining === 0) {
-	        lib$es6$promise$$internal$$fulfill(promise, this._result);
-	      }
-	    };
-
-	    lib$es6$promise$enumerator$$Enumerator.prototype._willSettleAt = function(promise, i) {
-	      var enumerator = this;
-
-	      lib$es6$promise$$internal$$subscribe(promise, undefined, function(value) {
-	        enumerator._settledAt(lib$es6$promise$$internal$$FULFILLED, i, value);
-	      }, function(reason) {
-	        enumerator._settledAt(lib$es6$promise$$internal$$REJECTED, i, reason);
-	      });
-	    };
-	    function lib$es6$promise$polyfill$$polyfill() {
-	      var local;
-
-	      if (typeof global !== 'undefined') {
-	          local = global;
-	      } else if (typeof self !== 'undefined') {
-	          local = self;
-	      } else {
-	          try {
-	              local = Function('return this')();
-	          } catch (e) {
-	              throw new Error('polyfill failed because global object is unavailable in this environment');
-	          }
-	      }
-
-	      var P = local.Promise;
-
-	      if (P && Object.prototype.toString.call(P.resolve()) === '[object Promise]' && !P.cast) {
-	        return;
-	      }
-
-	      local.Promise = lib$es6$promise$promise$$default;
+	    /**
+	     * Notifies the corresponding promise with the given `value`.
+	     *
+	     * @param {*} value
+	     *
+	     * @example
+	     * ```js
+	     * var defer = vow.defer(),
+	     *     promise = defer.promise();
+	     *
+	     * promise.progress(function(value) {
+	     *     // value is "'20%'", "'40%'" here
+	     * });
+	     *
+	     * defer.notify('20%');
+	     * defer.notify('40%');
+	     * ```
+	     */
+	    notify : function(value) {
+	        this._promise.isResolved() || this._promise._notify(value);
 	    }
-	    var lib$es6$promise$polyfill$$default = lib$es6$promise$polyfill$$polyfill;
+	};
 
-	    var lib$es6$promise$umd$$ES6Promise = {
-	      'Promise': lib$es6$promise$promise$$default,
-	      'polyfill': lib$es6$promise$polyfill$$default
-	    };
+	var PROMISE_STATUS = {
+	    PENDING   : 0,
+	    RESOLVED  : 1,
+	    FULFILLED : 2,
+	    REJECTED  : 3
+	};
 
-	    /* global define:true module:true window: true */
-	    if ("function" === 'function' && __webpack_require__(105)['amd']) {
-	      !(__WEBPACK_AMD_DEFINE_RESULT__ = function() { return lib$es6$promise$umd$$ES6Promise; }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	    } else if (typeof module !== 'undefined' && module['exports']) {
-	      module['exports'] = lib$es6$promise$umd$$ES6Promise;
-	    } else if (typeof this !== 'undefined') {
-	      this['ES6Promise'] = lib$es6$promise$umd$$ES6Promise;
+	/**
+	 * @class Promise
+	 * @exports vow:Promise
+	 * @description
+	 * The `Promise` class is used when you want to give to the caller something to subscribe to,
+	 * but not the ability to resolve or reject the deferred.
+	 */
+
+	/**
+	 * @constructor
+	 * @param {Function} resolver See https://github.com/domenic/promises-unwrapping/blob/master/README.md#the-promise-constructor for details.
+	 * @description
+	 * You should use this constructor directly only if you are going to use `vow` as DOM Promises implementation.
+	 * In other case you should use `vow.defer()` and `defer.promise()` methods.
+	 * @example
+	 * ```js
+	 * function fetchJSON(url) {
+	 *     return new vow.Promise(function(resolve, reject, notify) {
+	 *         var xhr = new XMLHttpRequest();
+	 *         xhr.open('GET', url);
+	 *         xhr.responseType = 'json';
+	 *         xhr.send();
+	 *         xhr.onload = function() {
+	 *             if(xhr.response) {
+	 *                 resolve(xhr.response);
+	 *             }
+	 *             else {
+	 *                 reject(new TypeError());
+	 *             }
+	 *         };
+	 *     });
+	 * }
+	 * ```
+	 */
+	var Promise = function(resolver) {
+	    this._value = undef;
+	    this._status = PROMISE_STATUS.PENDING;
+
+	    this._fulfilledCallbacks = [];
+	    this._rejectedCallbacks = [];
+	    this._progressCallbacks = [];
+
+	    if(resolver) { // NOTE: see https://github.com/domenic/promises-unwrapping/blob/master/README.md
+	        var _this = this,
+	            resolverFnLen = resolver.length;
+
+	        resolver(
+	            function(val) {
+	                _this.isResolved() || _this._resolve(val);
+	            },
+	            resolverFnLen > 1?
+	                function(reason) {
+	                    _this.isResolved() || _this._reject(reason);
+	                } :
+	                undef,
+	            resolverFnLen > 2?
+	                function(val) {
+	                    _this.isResolved() || _this._notify(val);
+	                } :
+	                undef);
 	    }
+	};
 
-	    lib$es6$promise$polyfill$$default();
-	}).call(this);
+	Promise.prototype = /** @lends Promise.prototype */ {
+	    /**
+	     * Returns the value of the fulfilled promise or the reason in case of rejection.
+	     *
+	     * @returns {*}
+	     */
+	    valueOf : function() {
+	        return this._value;
+	    },
 
+	    /**
+	     * Returns `true` if the promise is resolved.
+	     *
+	     * @returns {Boolean}
+	     */
+	    isResolved : function() {
+	        return this._status !== PROMISE_STATUS.PENDING;
+	    },
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(101), (function() { return this; }()), __webpack_require__(103)(module)))
+	    /**
+	     * Returns `true` if the promise is fulfilled.
+	     *
+	     * @returns {Boolean}
+	     */
+	    isFulfilled : function() {
+	        return this._status === PROMISE_STATUS.FULFILLED;
+	    },
+
+	    /**
+	     * Returns `true` if the promise is rejected.
+	     *
+	     * @returns {Boolean}
+	     */
+	    isRejected : function() {
+	        return this._status === PROMISE_STATUS.REJECTED;
+	    },
+
+	    /**
+	     * Adds reactions to the promise.
+	     *
+	     * @param {Function} [onFulfilled] Callback that will be invoked with a provided value after the promise has been fulfilled
+	     * @param {Function} [onRejected] Callback that will be invoked with a provided reason after the promise has been rejected
+	     * @param {Function} [onProgress] Callback that will be invoked with a provided value after the promise has been notified
+	     * @param {Object} [ctx] Context of the callbacks execution
+	     * @returns {vow:Promise} A new promise, see https://github.com/promises-aplus/promises-spec for details
+	     */
+	    then : function(onFulfilled, onRejected, onProgress, ctx) {
+	        var defer = new Deferred();
+	        this._addCallbacks(defer, onFulfilled, onRejected, onProgress, ctx);
+	        return defer.promise();
+	    },
+
+	    /**
+	     * Adds only a rejection reaction. This method is a shorthand for `promise.then(undefined, onRejected)`.
+	     *
+	     * @param {Function} onRejected Callback that will be called with a provided 'reason' as argument after the promise has been rejected
+	     * @param {Object} [ctx] Context of the callback execution
+	     * @returns {vow:Promise}
+	     */
+	    'catch' : function(onRejected, ctx) {
+	        return this.then(undef, onRejected, ctx);
+	    },
+
+	    /**
+	     * Adds only a rejection reaction. This method is a shorthand for `promise.then(null, onRejected)`. It's also an alias for `catch`.
+	     *
+	     * @param {Function} onRejected Callback to be called with the value after promise has been rejected
+	     * @param {Object} [ctx] Context of the callback execution
+	     * @returns {vow:Promise}
+	     */
+	    fail : function(onRejected, ctx) {
+	        return this.then(undef, onRejected, ctx);
+	    },
+
+	    /**
+	     * Adds a resolving reaction (for both fulfillment and rejection).
+	     *
+	     * @param {Function} onResolved Callback that will be invoked with the promise as an argument, after the promise has been resolved.
+	     * @param {Object} [ctx] Context of the callback execution
+	     * @returns {vow:Promise}
+	     */
+	    always : function(onResolved, ctx) {
+	        var _this = this,
+	            cb = function() {
+	                return onResolved.call(this, _this);
+	            };
+
+	        return this.then(cb, cb, ctx);
+	    },
+
+	    /**
+	     * Adds a progress reaction.
+	     *
+	     * @param {Function} onProgress Callback that will be called with a provided value when the promise has been notified
+	     * @param {Object} [ctx] Context of the callback execution
+	     * @returns {vow:Promise}
+	     */
+	    progress : function(onProgress, ctx) {
+	        return this.then(undef, undef, onProgress, ctx);
+	    },
+
+	    /**
+	     * Like `promise.then`, but "spreads" the array into a variadic value handler.
+	     * It is useful with the `vow.all` and the `vow.allResolved` methods.
+	     *
+	     * @param {Function} [onFulfilled] Callback that will be invoked with a provided value after the promise has been fulfilled
+	     * @param {Function} [onRejected] Callback that will be invoked with a provided reason after the promise has been rejected
+	     * @param {Object} [ctx] Context of the callbacks execution
+	     * @returns {vow:Promise}
+	     *
+	     * @example
+	     * ```js
+	     * var defer1 = vow.defer(),
+	     *     defer2 = vow.defer();
+	     *
+	     * vow.all([defer1.promise(), defer2.promise()]).spread(function(arg1, arg2) {
+	     *     // arg1 is "1", arg2 is "'two'" here
+	     * });
+	     *
+	     * defer1.resolve(1);
+	     * defer2.resolve('two');
+	     * ```
+	     */
+	    spread : function(onFulfilled, onRejected, ctx) {
+	        return this.then(
+	            function(val) {
+	                return onFulfilled.apply(this, val);
+	            },
+	            onRejected,
+	            ctx);
+	    },
+
+	    /**
+	     * Like `then`, but terminates a chain of promises.
+	     * If the promise has been rejected, this method throws it's "reason" as an exception in a future turn of the event loop.
+	     *
+	     * @param {Function} [onFulfilled] Callback that will be invoked with a provided value after the promise has been fulfilled
+	     * @param {Function} [onRejected] Callback that will be invoked with a provided reason after the promise has been rejected
+	     * @param {Function} [onProgress] Callback that will be invoked with a provided value after the promise has been notified
+	     * @param {Object} [ctx] Context of the callbacks execution
+	     *
+	     * @example
+	     * ```js
+	     * var defer = vow.defer();
+	     * defer.reject(Error('Internal error'));
+	     * defer.promise().done(); // exception to be thrown
+	     * ```
+	     */
+	    done : function(onFulfilled, onRejected, onProgress, ctx) {
+	        this
+	            .then(onFulfilled, onRejected, onProgress, ctx)
+	            .fail(throwException);
+	    },
+
+	    /**
+	     * Returns a new promise that will be fulfilled in `delay` milliseconds if the promise is fulfilled,
+	     * or immediately rejected if the promise is rejected.
+	     *
+	     * @param {Number} delay
+	     * @returns {vow:Promise}
+	     */
+	    delay : function(delay) {
+	        var timer,
+	            promise = this.then(function(val) {
+	                var defer = new Deferred();
+	                timer = setTimeout(
+	                    function() {
+	                        defer.resolve(val);
+	                    },
+	                    delay);
+
+	                return defer.promise();
+	            });
+
+	        promise.always(function() {
+	            clearTimeout(timer);
+	        });
+
+	        return promise;
+	    },
+
+	    /**
+	     * Returns a new promise that will be rejected in `timeout` milliseconds
+	     * if the promise is not resolved beforehand.
+	     *
+	     * @param {Number} timeout
+	     * @returns {vow:Promise}
+	     *
+	     * @example
+	     * ```js
+	     * var defer = vow.defer(),
+	     *     promiseWithTimeout1 = defer.promise().timeout(50),
+	     *     promiseWithTimeout2 = defer.promise().timeout(200);
+	     *
+	     * setTimeout(
+	     *     function() {
+	     *         defer.resolve('ok');
+	     *     },
+	     *     100);
+	     *
+	     * promiseWithTimeout1.fail(function(reason) {
+	     *     // promiseWithTimeout to be rejected in 50ms
+	     * });
+	     *
+	     * promiseWithTimeout2.then(function(value) {
+	     *     // promiseWithTimeout to be fulfilled with "'ok'" value
+	     * });
+	     * ```
+	     */
+	    timeout : function(timeout) {
+	        var defer = new Deferred(),
+	            timer = setTimeout(
+	                function() {
+	                    defer.reject(new vow.TimedOutError('timed out'));
+	                },
+	                timeout);
+
+	        this.then(
+	            function(val) {
+	                defer.resolve(val);
+	            },
+	            function(reason) {
+	                defer.reject(reason);
+	            });
+
+	        defer.promise().always(function() {
+	            clearTimeout(timer);
+	        });
+
+	        return defer.promise();
+	    },
+
+	    _vow : true,
+
+	    _resolve : function(val) {
+	        if(this._status > PROMISE_STATUS.RESOLVED) {
+	            return;
+	        }
+
+	        if(val === this) {
+	            this._reject(TypeError('Can\'t resolve promise with itself'));
+	            return;
+	        }
+
+	        this._status = PROMISE_STATUS.RESOLVED;
+
+	        if(val && !!val._vow) { // shortpath for vow.Promise
+	            val.isFulfilled()?
+	                this._fulfill(val.valueOf()) :
+	                val.isRejected()?
+	                    this._reject(val.valueOf()) :
+	                    val.then(
+	                        this._fulfill,
+	                        this._reject,
+	                        this._notify,
+	                        this);
+	            return;
+	        }
+
+	        if(isObject(val) || isFunction(val)) {
+	            var then;
+	            try {
+	                then = val.then;
+	            }
+	            catch(e) {
+	                this._reject(e);
+	                return;
+	            }
+
+	            if(isFunction(then)) {
+	                var _this = this,
+	                    isResolved = false;
+
+	                try {
+	                    then.call(
+	                        val,
+	                        function(val) {
+	                            if(isResolved) {
+	                                return;
+	                            }
+
+	                            isResolved = true;
+	                            _this._resolve(val);
+	                        },
+	                        function(err) {
+	                            if(isResolved) {
+	                                return;
+	                            }
+
+	                            isResolved = true;
+	                            _this._reject(err);
+	                        },
+	                        function(val) {
+	                            _this._notify(val);
+	                        });
+	                }
+	                catch(e) {
+	                    isResolved || this._reject(e);
+	                }
+
+	                return;
+	            }
+	        }
+
+	        this._fulfill(val);
+	    },
+
+	    _fulfill : function(val) {
+	        if(this._status > PROMISE_STATUS.RESOLVED) {
+	            return;
+	        }
+
+	        this._status = PROMISE_STATUS.FULFILLED;
+	        this._value = val;
+
+	        this._callCallbacks(this._fulfilledCallbacks, val);
+	        this._fulfilledCallbacks = this._rejectedCallbacks = this._progressCallbacks = undef;
+	    },
+
+	    _reject : function(reason) {
+	        if(this._status > PROMISE_STATUS.RESOLVED) {
+	            return;
+	        }
+
+	        this._status = PROMISE_STATUS.REJECTED;
+	        this._value = reason;
+
+	        this._callCallbacks(this._rejectedCallbacks, reason);
+	        this._fulfilledCallbacks = this._rejectedCallbacks = this._progressCallbacks = undef;
+	    },
+
+	    _notify : function(val) {
+	        this._callCallbacks(this._progressCallbacks, val);
+	    },
+
+	    _addCallbacks : function(defer, onFulfilled, onRejected, onProgress, ctx) {
+	        if(onRejected && !isFunction(onRejected)) {
+	            ctx = onRejected;
+	            onRejected = undef;
+	        }
+	        else if(onProgress && !isFunction(onProgress)) {
+	            ctx = onProgress;
+	            onProgress = undef;
+	        }
+
+	        var cb;
+
+	        if(!this.isRejected()) {
+	            cb = { defer : defer, fn : isFunction(onFulfilled)? onFulfilled : undef, ctx : ctx };
+	            this.isFulfilled()?
+	                this._callCallbacks([cb], this._value) :
+	                this._fulfilledCallbacks.push(cb);
+	        }
+
+	        if(!this.isFulfilled()) {
+	            cb = { defer : defer, fn : onRejected, ctx : ctx };
+	            this.isRejected()?
+	                this._callCallbacks([cb], this._value) :
+	                this._rejectedCallbacks.push(cb);
+	        }
+
+	        if(this._status <= PROMISE_STATUS.RESOLVED) {
+	            this._progressCallbacks.push({ defer : defer, fn : onProgress, ctx : ctx });
+	        }
+	    },
+
+	    _callCallbacks : function(callbacks, arg) {
+	        var len = callbacks.length;
+	        if(!len) {
+	            return;
+	        }
+
+	        var isResolved = this.isResolved(),
+	            isFulfilled = this.isFulfilled(),
+	            isRejected = this.isRejected();
+
+	        nextTick(function() {
+	            var i = 0, cb, defer, fn;
+	            while(i < len) {
+	                cb = callbacks[i++];
+	                defer = cb.defer;
+	                fn = cb.fn;
+
+	                if(fn) {
+	                    var ctx = cb.ctx,
+	                        res;
+	                    try {
+	                        res = ctx? fn.call(ctx, arg) : fn(arg);
+	                    }
+	                    catch(e) {
+	                        defer.reject(e);
+	                        continue;
+	                    }
+
+	                    isResolved?
+	                        defer.resolve(res) :
+	                        defer.notify(res);
+	                }
+	                else if(isFulfilled) {
+	                    defer.resolve(arg);
+	                }
+	                else if(isRejected) {
+	                    defer.reject(arg);
+	                }
+	                else {
+	                    defer.notify(arg);
+	                }
+	            }
+	        });
+	    }
+	};
+
+	/** @lends Promise */
+	var staticMethods = {
+	    /**
+	     * Coerces the given `value` to a promise, or returns the `value` if it's already a promise.
+	     *
+	     * @param {*} value
+	     * @returns {vow:Promise}
+	     */
+	    cast : function(value) {
+	        return vow.cast(value);
+	    },
+
+	    /**
+	     * Returns a promise, that will be fulfilled only after all the items in `iterable` are fulfilled.
+	     * If any of the `iterable` items gets rejected, then the returned promise will be rejected.
+	     *
+	     * @param {Array|Object} iterable
+	     * @returns {vow:Promise}
+	     */
+	    all : function(iterable) {
+	        return vow.all(iterable);
+	    },
+
+	    /**
+	     * Returns a promise, that will be fulfilled only when any of the items in `iterable` are fulfilled.
+	     * If any of the `iterable` items gets rejected, then the returned promise will be rejected.
+	     *
+	     * @param {Array} iterable
+	     * @returns {vow:Promise}
+	     */
+	    race : function(iterable) {
+	        return vow.anyResolved(iterable);
+	    },
+
+	    /**
+	     * Returns a promise that has already been resolved with the given `value`.
+	     * If `value` is a promise, the returned promise will have `value`'s state.
+	     *
+	     * @param {*} value
+	     * @returns {vow:Promise}
+	     */
+	    resolve : function(value) {
+	        return vow.resolve(value);
+	    },
+
+	    /**
+	     * Returns a promise that has already been rejected with the given `reason`.
+	     *
+	     * @param {*} reason
+	     * @returns {vow:Promise}
+	     */
+	    reject : function(reason) {
+	        return vow.reject(reason);
+	    }
+	};
+
+	for(var prop in staticMethods) {
+	    staticMethods.hasOwnProperty(prop) &&
+	        (Promise[prop] = staticMethods[prop]);
+	}
+
+	var vow = /** @exports vow */ {
+	    Deferred : Deferred,
+
+	    Promise : Promise,
+
+	    /**
+	     * Creates a new deferred. This method is a factory method for `vow:Deferred` class.
+	     * It's equivalent to `new vow.Deferred()`.
+	     *
+	     * @returns {vow:Deferred}
+	     */
+	    defer : function() {
+	        return new Deferred();
+	    },
+
+	    /**
+	     * Static equivalent to `promise.then`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @param {Function} [onFulfilled] Callback that will be invoked with a provided value after the promise has been fulfilled
+	     * @param {Function} [onRejected] Callback that will be invoked with a provided reason after the promise has been rejected
+	     * @param {Function} [onProgress] Callback that will be invoked with a provided value after the promise has been notified
+	     * @param {Object} [ctx] Context of the callbacks execution
+	     * @returns {vow:Promise}
+	     */
+	    when : function(value, onFulfilled, onRejected, onProgress, ctx) {
+	        return vow.cast(value).then(onFulfilled, onRejected, onProgress, ctx);
+	    },
+
+	    /**
+	     * Static equivalent to `promise.fail`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @param {Function} onRejected Callback that will be invoked with a provided reason after the promise has been rejected
+	     * @param {Object} [ctx] Context of the callback execution
+	     * @returns {vow:Promise}
+	     */
+	    fail : function(value, onRejected, ctx) {
+	        return vow.when(value, undef, onRejected, ctx);
+	    },
+
+	    /**
+	     * Static equivalent to `promise.always`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @param {Function} onResolved Callback that will be invoked with the promise as an argument, after the promise has been resolved.
+	     * @param {Object} [ctx] Context of the callback execution
+	     * @returns {vow:Promise}
+	     */
+	    always : function(value, onResolved, ctx) {
+	        return vow.when(value).always(onResolved, ctx);
+	    },
+
+	    /**
+	     * Static equivalent to `promise.progress`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @param {Function} onProgress Callback that will be invoked with a provided value after the promise has been notified
+	     * @param {Object} [ctx] Context of the callback execution
+	     * @returns {vow:Promise}
+	     */
+	    progress : function(value, onProgress, ctx) {
+	        return vow.when(value).progress(onProgress, ctx);
+	    },
+
+	    /**
+	     * Static equivalent to `promise.spread`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @param {Function} [onFulfilled] Callback that will be invoked with a provided value after the promise has been fulfilled
+	     * @param {Function} [onRejected] Callback that will be invoked with a provided reason after the promise has been rejected
+	     * @param {Object} [ctx] Context of the callbacks execution
+	     * @returns {vow:Promise}
+	     */
+	    spread : function(value, onFulfilled, onRejected, ctx) {
+	        return vow.when(value).spread(onFulfilled, onRejected, ctx);
+	    },
+
+	    /**
+	     * Static equivalent to `promise.done`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @param {Function} [onFulfilled] Callback that will be invoked with a provided value after the promise has been fulfilled
+	     * @param {Function} [onRejected] Callback that will be invoked with a provided reason after the promise has been rejected
+	     * @param {Function} [onProgress] Callback that will be invoked with a provided value after the promise has been notified
+	     * @param {Object} [ctx] Context of the callbacks execution
+	     */
+	    done : function(value, onFulfilled, onRejected, onProgress, ctx) {
+	        vow.when(value).done(onFulfilled, onRejected, onProgress, ctx);
+	    },
+
+	    /**
+	     * Checks whether the given `value` is a promise-like object
+	     *
+	     * @param {*} value
+	     * @returns {Boolean}
+	     *
+	     * @example
+	     * ```js
+	     * vow.isPromise('something'); // returns false
+	     * vow.isPromise(vow.defer().promise()); // returns true
+	     * vow.isPromise({ then : function() { }); // returns true
+	     * ```
+	     */
+	    isPromise : function(value) {
+	        return isObject(value) && isFunction(value.then);
+	    },
+
+	    /**
+	     * Coerces the given `value` to a promise, or returns the `value` if it's already a promise.
+	     *
+	     * @param {*} value
+	     * @returns {vow:Promise}
+	     */
+	    cast : function(value) {
+	        return value && !!value._vow?
+	            value :
+	            vow.resolve(value);
+	    },
+
+	    /**
+	     * Static equivalent to `promise.valueOf`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @returns {*}
+	     */
+	    valueOf : function(value) {
+	        return value && isFunction(value.valueOf)? value.valueOf() : value;
+	    },
+
+	    /**
+	     * Static equivalent to `promise.isFulfilled`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @returns {Boolean}
+	     */
+	    isFulfilled : function(value) {
+	        return value && isFunction(value.isFulfilled)? value.isFulfilled() : true;
+	    },
+
+	    /**
+	     * Static equivalent to `promise.isRejected`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @returns {Boolean}
+	     */
+	    isRejected : function(value) {
+	        return value && isFunction(value.isRejected)? value.isRejected() : false;
+	    },
+
+	    /**
+	     * Static equivalent to `promise.isResolved`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @returns {Boolean}
+	     */
+	    isResolved : function(value) {
+	        return value && isFunction(value.isResolved)? value.isResolved() : true;
+	    },
+
+	    /**
+	     * Returns a promise that has already been resolved with the given `value`.
+	     * If `value` is a promise, the returned promise will have `value`'s state.
+	     *
+	     * @param {*} value
+	     * @returns {vow:Promise}
+	     */
+	    resolve : function(value) {
+	        var res = vow.defer();
+	        res.resolve(value);
+	        return res.promise();
+	    },
+
+	    /**
+	     * Returns a promise that has already been fulfilled with the given `value`.
+	     * If `value` is a promise, the returned promise will be fulfilled with the fulfill/rejection value of `value`.
+	     *
+	     * @param {*} value
+	     * @returns {vow:Promise}
+	     */
+	    fulfill : function(value) {
+	        var defer = vow.defer(),
+	            promise = defer.promise();
+
+	        defer.resolve(value);
+
+	        return promise.isFulfilled()?
+	            promise :
+	            promise.then(null, function(reason) {
+	                return reason;
+	            });
+	    },
+
+	    /**
+	     * Returns a promise that has already been rejected with the given `reason`.
+	     * If `reason` is a promise, the returned promise will be rejected with the fulfill/rejection value of `reason`.
+	     *
+	     * @param {*} reason
+	     * @returns {vow:Promise}
+	     */
+	    reject : function(reason) {
+	        var defer = vow.defer();
+	        defer.reject(reason);
+	        return defer.promise();
+	    },
+
+	    /**
+	     * Invokes the given function `fn` with arguments `args`
+	     *
+	     * @param {Function} fn
+	     * @param {...*} [args]
+	     * @returns {vow:Promise}
+	     *
+	     * @example
+	     * ```js
+	     * var promise1 = vow.invoke(function(value) {
+	     *         return value;
+	     *     }, 'ok'),
+	     *     promise2 = vow.invoke(function() {
+	     *         throw Error();
+	     *     });
+	     *
+	     * promise1.isFulfilled(); // true
+	     * promise1.valueOf(); // 'ok'
+	     * promise2.isRejected(); // true
+	     * promise2.valueOf(); // instance of Error
+	     * ```
+	     */
+	    invoke : function(fn, args) {
+	        var len = Math.max(arguments.length - 1, 0),
+	            callArgs;
+	        if(len) { // optimization for V8
+	            callArgs = Array(len);
+	            var i = 0;
+	            while(i < len) {
+	                callArgs[i++] = arguments[i];
+	            }
+	        }
+
+	        try {
+	            return vow.resolve(callArgs?
+	                fn.apply(global, callArgs) :
+	                fn.call(global));
+	        }
+	        catch(e) {
+	            return vow.reject(e);
+	        }
+	    },
+
+	    /**
+	     * Returns a promise, that will be fulfilled only after all the items in `iterable` are fulfilled.
+	     * If any of the `iterable` items gets rejected, the promise will be rejected.
+	     *
+	     * @param {Array|Object} iterable
+	     * @returns {vow:Promise}
+	     *
+	     * @example
+	     * with array:
+	     * ```js
+	     * var defer1 = vow.defer(),
+	     *     defer2 = vow.defer();
+	     *
+	     * vow.all([defer1.promise(), defer2.promise(), 3])
+	     *     .then(function(value) {
+	     *          // value is "[1, 2, 3]" here
+	     *     });
+	     *
+	     * defer1.resolve(1);
+	     * defer2.resolve(2);
+	     * ```
+	     *
+	     * @example
+	     * with object:
+	     * ```js
+	     * var defer1 = vow.defer(),
+	     *     defer2 = vow.defer();
+	     *
+	     * vow.all({ p1 : defer1.promise(), p2 : defer2.promise(), p3 : 3 })
+	     *     .then(function(value) {
+	     *          // value is "{ p1 : 1, p2 : 2, p3 : 3 }" here
+	     *     });
+	     *
+	     * defer1.resolve(1);
+	     * defer2.resolve(2);
+	     * ```
+	     */
+	    all : function(iterable) {
+	        var defer = new Deferred(),
+	            isPromisesArray = isArray(iterable),
+	            keys = isPromisesArray?
+	                getArrayKeys(iterable) :
+	                getObjectKeys(iterable),
+	            len = keys.length,
+	            res = isPromisesArray? [] : {};
+
+	        if(!len) {
+	            defer.resolve(res);
+	            return defer.promise();
+	        }
+
+	        var i = len;
+	        vow._forEach(
+	            iterable,
+	            function(value, idx) {
+	                res[keys[idx]] = value;
+	                if(!--i) {
+	                    defer.resolve(res);
+	                }
+	            },
+	            defer.reject,
+	            defer.notify,
+	            defer,
+	            keys);
+
+	        return defer.promise();
+	    },
+
+	    /**
+	     * Returns a promise, that will be fulfilled only after all the items in `iterable` are resolved.
+	     *
+	     * @param {Array|Object} iterable
+	     * @returns {vow:Promise}
+	     *
+	     * @example
+	     * ```js
+	     * var defer1 = vow.defer(),
+	     *     defer2 = vow.defer();
+	     *
+	     * vow.allResolved([defer1.promise(), defer2.promise()]).spread(function(promise1, promise2) {
+	     *     promise1.isRejected(); // returns true
+	     *     promise1.valueOf(); // returns "'error'"
+	     *     promise2.isFulfilled(); // returns true
+	     *     promise2.valueOf(); // returns "'ok'"
+	     * });
+	     *
+	     * defer1.reject('error');
+	     * defer2.resolve('ok');
+	     * ```
+	     */
+	    allResolved : function(iterable) {
+	        var defer = new Deferred(),
+	            isPromisesArray = isArray(iterable),
+	            keys = isPromisesArray?
+	                getArrayKeys(iterable) :
+	                getObjectKeys(iterable),
+	            i = keys.length,
+	            res = isPromisesArray? [] : {};
+
+	        if(!i) {
+	            defer.resolve(res);
+	            return defer.promise();
+	        }
+
+	        var onResolved = function() {
+	                --i || defer.resolve(iterable);
+	            };
+
+	        vow._forEach(
+	            iterable,
+	            onResolved,
+	            onResolved,
+	            defer.notify,
+	            defer,
+	            keys);
+
+	        return defer.promise();
+	    },
+
+	    allPatiently : function(iterable) {
+	        return vow.allResolved(iterable).then(function() {
+	            var isPromisesArray = isArray(iterable),
+	                keys = isPromisesArray?
+	                    getArrayKeys(iterable) :
+	                    getObjectKeys(iterable),
+	                rejectedPromises, fulfilledPromises,
+	                len = keys.length, i = 0, key, promise;
+
+	            if(!len) {
+	                return isPromisesArray? [] : {};
+	            }
+
+	            while(i < len) {
+	                key = keys[i++];
+	                promise = iterable[key];
+	                if(vow.isRejected(promise)) {
+	                    rejectedPromises || (rejectedPromises = isPromisesArray? [] : {});
+	                    isPromisesArray?
+	                        rejectedPromises.push(promise.valueOf()) :
+	                        rejectedPromises[key] = promise.valueOf();
+	                }
+	                else if(!rejectedPromises) {
+	                    (fulfilledPromises || (fulfilledPromises = isPromisesArray? [] : {}))[key] = vow.valueOf(promise);
+	                }
+	            }
+
+	            if(rejectedPromises) {
+	                throw rejectedPromises;
+	            }
+
+	            return fulfilledPromises;
+	        });
+	    },
+
+	    /**
+	     * Returns a promise, that will be fulfilled if any of the items in `iterable` is fulfilled.
+	     * If all of the `iterable` items get rejected, the promise will be rejected (with the reason of the first rejected item).
+	     *
+	     * @param {Array} iterable
+	     * @returns {vow:Promise}
+	     */
+	    any : function(iterable) {
+	        var defer = new Deferred(),
+	            len = iterable.length;
+
+	        if(!len) {
+	            defer.reject(Error());
+	            return defer.promise();
+	        }
+
+	        var i = 0, reason;
+	        vow._forEach(
+	            iterable,
+	            defer.resolve,
+	            function(e) {
+	                i || (reason = e);
+	                ++i === len && defer.reject(reason);
+	            },
+	            defer.notify,
+	            defer);
+
+	        return defer.promise();
+	    },
+
+	    /**
+	     * Returns a promise, that will be fulfilled only when any of the items in `iterable` is fulfilled.
+	     * If any of the `iterable` items gets rejected, the promise will be rejected.
+	     *
+	     * @param {Array} iterable
+	     * @returns {vow:Promise}
+	     */
+	    anyResolved : function(iterable) {
+	        var defer = new Deferred(),
+	            len = iterable.length;
+
+	        if(!len) {
+	            defer.reject(Error());
+	            return defer.promise();
+	        }
+
+	        vow._forEach(
+	            iterable,
+	            defer.resolve,
+	            defer.reject,
+	            defer.notify,
+	            defer);
+
+	        return defer.promise();
+	    },
+
+	    /**
+	     * Static equivalent to `promise.delay`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @param {Number} delay
+	     * @returns {vow:Promise}
+	     */
+	    delay : function(value, delay) {
+	        return vow.resolve(value).delay(delay);
+	    },
+
+	    /**
+	     * Static equivalent to `promise.timeout`.
+	     * If `value` is not a promise, then `value` is treated as a fulfilled promise.
+	     *
+	     * @param {*} value
+	     * @param {Number} timeout
+	     * @returns {vow:Promise}
+	     */
+	    timeout : function(value, timeout) {
+	        return vow.resolve(value).timeout(timeout);
+	    },
+
+	    _forEach : function(promises, onFulfilled, onRejected, onProgress, ctx, keys) {
+	        var len = keys? keys.length : promises.length,
+	            i = 0;
+
+	        while(i < len) {
+	            vow.when(
+	                promises[keys? keys[i] : i],
+	                wrapOnFulfilled(onFulfilled, i),
+	                onRejected,
+	                onProgress,
+	                ctx);
+	            ++i;
+	        }
+	    },
+
+	    TimedOutError : defineCustomErrorType('TimedOut')
+	};
+
+	var defineAsGlobal = true;
+	if(typeof module === 'object' && typeof module.exports === 'object') {
+	    module.exports = vow;
+	    defineAsGlobal = false;
+	}
+
+	if(typeof modules === 'object' && isFunction(modules.define)) {
+	    modules.define('vow', function(provide) {
+	        provide(vow);
+	    });
+	    defineAsGlobal = false;
+	}
+
+	if(true) {
+	    !(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	        module.exports = vow;
+	    }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    defineAsGlobal = false;
+	}
+
+	defineAsGlobal && (global.vow = vow);
+
+	})(typeof window !== 'undefined'? window : global);
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(103).setImmediate, __webpack_require__(101)))
 
 /***/ },
 /* 103 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	module.exports = function(module) {
-		if(!module.webpackPolyfill) {
-			module.deprecate = function() {};
-			module.paths = [];
-			// module.parent = undefined by default
-			module.children = [];
-			module.webpackPolyfill = 1;
-		}
-		return module;
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(101).nextTick;
+	var apply = Function.prototype.apply;
+	var slice = Array.prototype.slice;
+	var immediateIds = {};
+	var nextImmediateId = 0;
+
+	// DOM APIs, for completeness
+
+	exports.setTimeout = function() {
+	  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+	};
+	exports.setInterval = function() {
+	  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+	};
+	exports.clearTimeout =
+	exports.clearInterval = function(timeout) { timeout.close(); };
+
+	function Timeout(id, clearFn) {
+	  this._id = id;
+	  this._clearFn = clearFn;
 	}
+	Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+	Timeout.prototype.close = function() {
+	  this._clearFn.call(window, this._id);
+	};
 
+	// Does not start the time, just sets up the members needed.
+	exports.enroll = function(item, msecs) {
+	  clearTimeout(item._idleTimeoutId);
+	  item._idleTimeout = msecs;
+	};
+
+	exports.unenroll = function(item) {
+	  clearTimeout(item._idleTimeoutId);
+	  item._idleTimeout = -1;
+	};
+
+	exports._unrefActive = exports.active = function(item) {
+	  clearTimeout(item._idleTimeoutId);
+
+	  var msecs = item._idleTimeout;
+	  if (msecs >= 0) {
+	    item._idleTimeoutId = setTimeout(function onTimeout() {
+	      if (item._onTimeout)
+	        item._onTimeout();
+	    }, msecs);
+	  }
+	};
+
+	// That's not how node.js implements it but the exposed api is the same.
+	exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
+	  var id = nextImmediateId++;
+	  var args = arguments.length < 2 ? false : slice.call(arguments, 1);
+
+	  immediateIds[id] = true;
+
+	  nextTick(function onNextTick() {
+	    if (immediateIds[id]) {
+	      // fn.call() is faster so we optimize for the common use-case
+	      // @see http://jsperf.com/call-apply-segu
+	      if (args) {
+	        fn.apply(null, args);
+	      } else {
+	        fn.call(null);
+	      }
+	      // Prevent ids from leaking
+	      exports.clearImmediate(id);
+	    }
+	  });
+
+	  return id;
+	};
+
+	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
+	  delete immediateIds[id];
+	};
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(103).setImmediate, __webpack_require__(103).clearImmediate))
 
 /***/ },
 /* 104 */
-/***/ function(module, exports) {
-
-	/* (ignored) */
-
-/***/ },
-/* 105 */
-/***/ function(module, exports) {
-
-	module.exports = function() { throw new Error("define cannot be used indirect"); };
-
-
-/***/ },
-/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _Symbol = __webpack_require__(107);
+	var _Symbol = __webpack_require__(105);
 
 	exports.CONTEXT = _Symbol('mops-context');
 	exports.QUEUE = _Symbol('mops-queue');
@@ -4838,16 +5267,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.ACTION_LOCK = _Symbol('mops-action-lock');
 
 /***/ },
-/* 107 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(108)() ? Symbol : __webpack_require__(109);
+	module.exports = __webpack_require__(106)() ? Symbol : __webpack_require__(107);
 
 
 /***/ },
-/* 108 */
+/* 106 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -4870,15 +5299,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 109 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ES2015 Symbol polyfill for environments that do not support it (or partially support it)
 
 	'use strict';
 
-	var d              = __webpack_require__(110)
-	  , validateSymbol = __webpack_require__(123)
+	var d              = __webpack_require__(108)
+	  , validateSymbol = __webpack_require__(121)
 
 	  , create = Object.create, defineProperties = Object.defineProperties
 	  , defineProperty = Object.defineProperty, objPrototype = Object.prototype
@@ -4994,15 +5423,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 110 */
+/* 108 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var assign        = __webpack_require__(111)
-	  , normalizeOpts = __webpack_require__(118)
-	  , isCallable    = __webpack_require__(119)
-	  , contains      = __webpack_require__(120)
+	var assign        = __webpack_require__(109)
+	  , normalizeOpts = __webpack_require__(116)
+	  , isCallable    = __webpack_require__(117)
+	  , contains      = __webpack_require__(118)
 
 	  , d;
 
@@ -5063,18 +5492,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 111 */
+/* 109 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(112)()
+	module.exports = __webpack_require__(110)()
 		? Object.assign
-		: __webpack_require__(113);
+		: __webpack_require__(111);
 
 
 /***/ },
-/* 112 */
+/* 110 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5089,13 +5518,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 113 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var keys  = __webpack_require__(114)
-	  , value = __webpack_require__(117)
+	var keys  = __webpack_require__(112)
+	  , value = __webpack_require__(115)
 
 	  , max = Math.max;
 
@@ -5117,18 +5546,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 114 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(115)()
+	module.exports = __webpack_require__(113)()
 		? Object.keys
-		: __webpack_require__(116);
+		: __webpack_require__(114);
 
 
 /***/ },
-/* 115 */
+/* 113 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5142,7 +5571,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 116 */
+/* 114 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5155,7 +5584,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 117 */
+/* 115 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5167,7 +5596,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 118 */
+/* 116 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5190,7 +5619,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 119 */
+/* 117 */
 /***/ function(module, exports) {
 
 	// Deprecated
@@ -5201,18 +5630,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 120 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(121)()
+	module.exports = __webpack_require__(119)()
 		? String.prototype.contains
-		: __webpack_require__(122);
+		: __webpack_require__(120);
 
 
 /***/ },
-/* 121 */
+/* 119 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5226,7 +5655,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 122 */
+/* 120 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5239,12 +5668,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 123 */
+/* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isSymbol = __webpack_require__(124);
+	var isSymbol = __webpack_require__(122);
 
 	module.exports = function (value) {
 		if (!isSymbol(value)) throw new TypeError(value + " is not a symbol");
@@ -5253,7 +5682,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 124 */
+/* 122 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5268,14 +5697,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 125 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var cloneDeepWith = __webpack_require__(126);
-	var Checked = __webpack_require__(185);
-	var Operation = __webpack_require__(233);
+	var cloneDeepWith = __webpack_require__(124);
+	var Checked = __webpack_require__(184);
+	var Operation = __webpack_require__(232);
 
 	module.exports = Context;
 
@@ -5301,10 +5730,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 126 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseClone = __webpack_require__(127);
+	var baseClone = __webpack_require__(125);
 
 	/**
 	 * This method is like `_.cloneWith` except that it recursively clones `value`.
@@ -5342,23 +5771,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 127 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Stack = __webpack_require__(128),
+	var Stack = __webpack_require__(126),
 	    arrayEach = __webpack_require__(85),
-	    assignValue = __webpack_require__(157),
-	    baseAssign = __webpack_require__(159),
-	    cloneBuffer = __webpack_require__(161),
+	    assignValue = __webpack_require__(155),
+	    baseAssign = __webpack_require__(157),
+	    cloneBuffer = __webpack_require__(159),
 	    copyArray = __webpack_require__(9),
-	    copySymbols = __webpack_require__(162),
-	    getAllKeys = __webpack_require__(165),
+	    copySymbols = __webpack_require__(160),
+	    getAllKeys = __webpack_require__(163),
 	    getTag = __webpack_require__(10),
-	    initCloneArray = __webpack_require__(168),
-	    initCloneByTag = __webpack_require__(169),
-	    initCloneObject = __webpack_require__(181),
+	    initCloneArray = __webpack_require__(166),
+	    initCloneByTag = __webpack_require__(167),
+	    initCloneObject = __webpack_require__(179),
 	    isArray = __webpack_require__(26),
-	    isBuffer = __webpack_require__(183),
+	    isBuffer = __webpack_require__(181),
 	    isObject = __webpack_require__(3),
 	    keys = __webpack_require__(38);
 
@@ -5483,15 +5912,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 128 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ListCache = __webpack_require__(129),
-	    stackClear = __webpack_require__(137),
-	    stackDelete = __webpack_require__(138),
-	    stackGet = __webpack_require__(139),
-	    stackHas = __webpack_require__(140),
-	    stackSet = __webpack_require__(141);
+	var ListCache = __webpack_require__(127),
+	    stackClear = __webpack_require__(135),
+	    stackDelete = __webpack_require__(136),
+	    stackGet = __webpack_require__(137),
+	    stackHas = __webpack_require__(138),
+	    stackSet = __webpack_require__(139);
 
 	/**
 	 * Creates a stack cache object to store key-value pairs.
@@ -5516,14 +5945,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 129 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var listCacheClear = __webpack_require__(130),
-	    listCacheDelete = __webpack_require__(131),
-	    listCacheGet = __webpack_require__(134),
-	    listCacheHas = __webpack_require__(135),
-	    listCacheSet = __webpack_require__(136);
+	var listCacheClear = __webpack_require__(128),
+	    listCacheDelete = __webpack_require__(129),
+	    listCacheGet = __webpack_require__(132),
+	    listCacheHas = __webpack_require__(133),
+	    listCacheSet = __webpack_require__(134);
 
 	/**
 	 * Creates an list cache object.
@@ -5554,7 +5983,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 130 */
+/* 128 */
 /***/ function(module, exports) {
 
 	/**
@@ -5573,10 +6002,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 131 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(132);
+	var assocIndexOf = __webpack_require__(130);
 
 	/** Used for built-in method references. */
 	var arrayProto = Array.prototype;
@@ -5614,10 +6043,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 132 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var eq = __webpack_require__(133);
+	var eq = __webpack_require__(131);
 
 	/**
 	 * Gets the index at which the `key` is found in `array` of key-value pairs.
@@ -5641,7 +6070,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 133 */
+/* 131 */
 /***/ function(module, exports) {
 
 	/**
@@ -5684,10 +6113,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 134 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(132);
+	var assocIndexOf = __webpack_require__(130);
 
 	/**
 	 * Gets the list cache value for `key`.
@@ -5709,10 +6138,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 135 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(132);
+	var assocIndexOf = __webpack_require__(130);
 
 	/**
 	 * Checks if a list cache value for `key` exists.
@@ -5731,10 +6160,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 136 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(132);
+	var assocIndexOf = __webpack_require__(130);
 
 	/**
 	 * Sets the list cache `key` to `value`.
@@ -5763,10 +6192,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 137 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ListCache = __webpack_require__(129);
+	var ListCache = __webpack_require__(127);
 
 	/**
 	 * Removes all key-value entries from the stack.
@@ -5784,7 +6213,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 138 */
+/* 136 */
 /***/ function(module, exports) {
 
 	/**
@@ -5808,7 +6237,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 139 */
+/* 137 */
 /***/ function(module, exports) {
 
 	/**
@@ -5828,7 +6257,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 140 */
+/* 138 */
 /***/ function(module, exports) {
 
 	/**
@@ -5848,12 +6277,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 141 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ListCache = __webpack_require__(129),
+	var ListCache = __webpack_require__(127),
 	    Map = __webpack_require__(18),
-	    MapCache = __webpack_require__(142);
+	    MapCache = __webpack_require__(140);
 
 	/** Used as the size to enable large array optimizations. */
 	var LARGE_ARRAY_SIZE = 200;
@@ -5888,14 +6317,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 142 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mapCacheClear = __webpack_require__(143),
-	    mapCacheDelete = __webpack_require__(151),
-	    mapCacheGet = __webpack_require__(154),
-	    mapCacheHas = __webpack_require__(155),
-	    mapCacheSet = __webpack_require__(156);
+	var mapCacheClear = __webpack_require__(141),
+	    mapCacheDelete = __webpack_require__(149),
+	    mapCacheGet = __webpack_require__(152),
+	    mapCacheHas = __webpack_require__(153),
+	    mapCacheSet = __webpack_require__(154);
 
 	/**
 	 * Creates a map cache object to store key-value pairs.
@@ -5926,11 +6355,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 143 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Hash = __webpack_require__(144),
-	    ListCache = __webpack_require__(129),
+	var Hash = __webpack_require__(142),
+	    ListCache = __webpack_require__(127),
 	    Map = __webpack_require__(18);
 
 	/**
@@ -5953,14 +6382,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 144 */
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var hashClear = __webpack_require__(145),
-	    hashDelete = __webpack_require__(147),
-	    hashGet = __webpack_require__(148),
-	    hashHas = __webpack_require__(149),
-	    hashSet = __webpack_require__(150);
+	var hashClear = __webpack_require__(143),
+	    hashDelete = __webpack_require__(145),
+	    hashGet = __webpack_require__(146),
+	    hashHas = __webpack_require__(147),
+	    hashSet = __webpack_require__(148);
 
 	/**
 	 * Creates a hash object.
@@ -5991,10 +6420,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 145 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(146);
+	var nativeCreate = __webpack_require__(144);
 
 	/**
 	 * Removes all key-value entries from the hash.
@@ -6012,7 +6441,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 146 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(12);
@@ -6024,7 +6453,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 147 */
+/* 145 */
 /***/ function(module, exports) {
 
 	/**
@@ -6047,10 +6476,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 148 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(146);
+	var nativeCreate = __webpack_require__(144);
 
 	/** Used to stand-in for `undefined` hash values. */
 	var HASH_UNDEFINED = '__lodash_hash_undefined__';
@@ -6083,10 +6512,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 149 */
+/* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(146);
+	var nativeCreate = __webpack_require__(144);
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -6112,10 +6541,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 150 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(146);
+	var nativeCreate = __webpack_require__(144);
 
 	/** Used to stand-in for `undefined` hash values. */
 	var HASH_UNDEFINED = '__lodash_hash_undefined__';
@@ -6141,10 +6570,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 151 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getMapData = __webpack_require__(152);
+	var getMapData = __webpack_require__(150);
 
 	/**
 	 * Removes `key` and its value from the map.
@@ -6165,10 +6594,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 152 */
+/* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isKeyable = __webpack_require__(153);
+	var isKeyable = __webpack_require__(151);
 
 	/**
 	 * Gets the data for `map`.
@@ -6189,7 +6618,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 153 */
+/* 151 */
 /***/ function(module, exports) {
 
 	/**
@@ -6210,10 +6639,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 154 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getMapData = __webpack_require__(152);
+	var getMapData = __webpack_require__(150);
 
 	/**
 	 * Gets the map value for `key`.
@@ -6232,10 +6661,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 155 */
+/* 153 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getMapData = __webpack_require__(152);
+	var getMapData = __webpack_require__(150);
 
 	/**
 	 * Checks if a map value for `key` exists.
@@ -6254,10 +6683,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 156 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getMapData = __webpack_require__(152);
+	var getMapData = __webpack_require__(150);
 
 	/**
 	 * Sets the map `key` to `value`.
@@ -6282,11 +6711,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 157 */
+/* 155 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseAssignValue = __webpack_require__(158),
-	    eq = __webpack_require__(133);
+	var baseAssignValue = __webpack_require__(156),
+	    eq = __webpack_require__(131);
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -6316,7 +6745,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 158 */
+/* 156 */
 /***/ function(module, exports) {
 
 	/** Built-in value references. */
@@ -6348,10 +6777,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 159 */
+/* 157 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObject = __webpack_require__(160),
+	var copyObject = __webpack_require__(158),
 	    keys = __webpack_require__(38);
 
 	/**
@@ -6371,11 +6800,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 160 */
+/* 158 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assignValue = __webpack_require__(157),
-	    baseAssignValue = __webpack_require__(158);
+	var assignValue = __webpack_require__(155),
+	    baseAssignValue = __webpack_require__(156);
 
 	/**
 	 * Copies properties of `source` to `object`.
@@ -6417,7 +6846,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 161 */
+/* 159 */
 /***/ function(module, exports) {
 
 	/**
@@ -6441,11 +6870,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 162 */
+/* 160 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObject = __webpack_require__(160),
-	    getSymbols = __webpack_require__(163);
+	var copyObject = __webpack_require__(158),
+	    getSymbols = __webpack_require__(161);
 
 	/**
 	 * Copies own symbol properties of `source` to `object`.
@@ -6463,11 +6892,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 163 */
+/* 161 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var overArg = __webpack_require__(47),
-	    stubArray = __webpack_require__(164);
+	    stubArray = __webpack_require__(162);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeGetSymbols = Object.getOwnPropertySymbols;
@@ -6485,7 +6914,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 164 */
+/* 162 */
 /***/ function(module, exports) {
 
 	/**
@@ -6514,11 +6943,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 165 */
+/* 163 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGetAllKeys = __webpack_require__(166),
-	    getSymbols = __webpack_require__(163),
+	var baseGetAllKeys = __webpack_require__(164),
+	    getSymbols = __webpack_require__(161),
 	    keys = __webpack_require__(38);
 
 	/**
@@ -6536,10 +6965,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 166 */
+/* 164 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayPush = __webpack_require__(167),
+	var arrayPush = __webpack_require__(165),
 	    isArray = __webpack_require__(26);
 
 	/**
@@ -6562,7 +6991,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 167 */
+/* 165 */
 /***/ function(module, exports) {
 
 	/**
@@ -6588,7 +7017,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 168 */
+/* 166 */
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -6620,16 +7049,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 169 */
+/* 167 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var cloneArrayBuffer = __webpack_require__(170),
-	    cloneDataView = __webpack_require__(172),
-	    cloneMap = __webpack_require__(173),
-	    cloneRegExp = __webpack_require__(176),
-	    cloneSet = __webpack_require__(177),
-	    cloneSymbol = __webpack_require__(179),
-	    cloneTypedArray = __webpack_require__(180);
+	var cloneArrayBuffer = __webpack_require__(168),
+	    cloneDataView = __webpack_require__(170),
+	    cloneMap = __webpack_require__(171),
+	    cloneRegExp = __webpack_require__(174),
+	    cloneSet = __webpack_require__(175),
+	    cloneSymbol = __webpack_require__(177),
+	    cloneTypedArray = __webpack_require__(178);
 
 	/** `Object#toString` result references. */
 	var boolTag = '[object Boolean]',
@@ -6706,10 +7135,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 170 */
+/* 168 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Uint8Array = __webpack_require__(171);
+	var Uint8Array = __webpack_require__(169);
 
 	/**
 	 * Creates a clone of `arrayBuffer`.
@@ -6728,7 +7157,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 171 */
+/* 169 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var root = __webpack_require__(7);
@@ -6740,10 +7169,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 172 */
+/* 170 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var cloneArrayBuffer = __webpack_require__(170);
+	var cloneArrayBuffer = __webpack_require__(168);
 
 	/**
 	 * Creates a clone of `dataView`.
@@ -6762,11 +7191,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 173 */
+/* 171 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addMapEntry = __webpack_require__(174),
-	    arrayReduce = __webpack_require__(175),
+	var addMapEntry = __webpack_require__(172),
+	    arrayReduce = __webpack_require__(173),
 	    mapToArray = __webpack_require__(29);
 
 	/**
@@ -6787,7 +7216,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 174 */
+/* 172 */
 /***/ function(module, exports) {
 
 	/**
@@ -6808,7 +7237,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 175 */
+/* 173 */
 /***/ function(module, exports) {
 
 	/**
@@ -6840,7 +7269,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 176 */
+/* 174 */
 /***/ function(module, exports) {
 
 	/** Used to match `RegExp` flags from their coerced string values. */
@@ -6863,11 +7292,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 177 */
+/* 175 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addSetEntry = __webpack_require__(178),
-	    arrayReduce = __webpack_require__(175),
+	var addSetEntry = __webpack_require__(176),
+	    arrayReduce = __webpack_require__(173),
 	    setToArray = __webpack_require__(30);
 
 	/**
@@ -6888,7 +7317,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 178 */
+/* 176 */
 /***/ function(module, exports) {
 
 	/**
@@ -6909,7 +7338,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 179 */
+/* 177 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(6);
@@ -6933,10 +7362,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 180 */
+/* 178 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var cloneArrayBuffer = __webpack_require__(170);
+	var cloneArrayBuffer = __webpack_require__(168);
 
 	/**
 	 * Creates a clone of `typedArray`.
@@ -6955,11 +7384,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 181 */
+/* 179 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseCreate = __webpack_require__(63),
-	    getPrototype = __webpack_require__(182),
+	    getPrototype = __webpack_require__(180),
 	    isPrototype = __webpack_require__(45);
 
 	/**
@@ -6979,7 +7408,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 182 */
+/* 180 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var overArg = __webpack_require__(47);
@@ -6991,11 +7420,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 183 */
+/* 181 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(module) {var root = __webpack_require__(7),
-	    stubFalse = __webpack_require__(184);
+	    stubFalse = __webpack_require__(183);
 
 	/** Detect free variable `exports`. */
 	var freeExports = typeof exports == 'object' && exports && !exports.nodeType && exports;
@@ -7033,10 +7462,26 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = isBuffer;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(103)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(182)(module)))
 
 /***/ },
-/* 184 */
+/* 182 */
+/***/ function(module, exports) {
+
+	module.exports = function(module) {
+		if(!module.webpackPolyfill) {
+			module.deprecate = function() {};
+			module.paths = [];
+			// module.parent = undefined by default
+			module.children = [];
+			module.webpackPolyfill = 1;
+		}
+		return module;
+	}
+
+
+/***/ },
+/* 183 */
 /***/ function(module, exports) {
 
 	/**
@@ -7060,18 +7505,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 185 */
+/* 184 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var castArray = __webpack_require__(186);
+	var castArray = __webpack_require__(185);
 	var toArray = __webpack_require__(5);
-	var isSet = __webpack_require__(187);
-	var toString = __webpack_require__(191);
-	var Set = __webpack_require__(193);
-	var Map = __webpack_require__(226);
-	var mopsSymbol = __webpack_require__(106);
+	var isSet = __webpack_require__(186);
+	var toString = __webpack_require__(190);
+	var Set = __webpack_require__(192);
+	var Map = __webpack_require__(225);
+	var mopsSymbol = __webpack_require__(104);
 
 	module.exports = Checked;
 
@@ -7226,7 +7671,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}();
 
 /***/ },
-/* 186 */
+/* 185 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(26);
@@ -7276,12 +7721,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 187 */
+/* 186 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsSet = __webpack_require__(188),
-	    baseUnary = __webpack_require__(189),
-	    nodeUtil = __webpack_require__(190);
+	var baseIsSet = __webpack_require__(187),
+	    baseUnary = __webpack_require__(188),
+	    nodeUtil = __webpack_require__(189);
 
 	/* Node.js helper references. */
 	var nodeIsSet = nodeUtil && nodeUtil.isSet;
@@ -7309,7 +7754,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 188 */
+/* 187 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getTag = __webpack_require__(10),
@@ -7333,7 +7778,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 189 */
+/* 188 */
 /***/ function(module, exports) {
 
 	/**
@@ -7353,7 +7798,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 190 */
+/* 189 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(module) {var freeGlobal = __webpack_require__(8);
@@ -7379,13 +7824,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = nodeUtil;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(103)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(182)(module)))
 
 /***/ },
-/* 191 */
+/* 190 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToString = __webpack_require__(192);
+	var baseToString = __webpack_require__(191);
 
 	/**
 	 * Converts `value` to a string. An empty string is returned for `null`
@@ -7416,7 +7861,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 192 */
+/* 191 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(6),
@@ -7453,16 +7898,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 193 */
+/* 192 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(194)() ? Set : __webpack_require__(195);
+	module.exports = __webpack_require__(193)() ? Set : __webpack_require__(194);
 
 
 /***/ },
-/* 194 */
+/* 193 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7492,22 +7937,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 195 */
+/* 194 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var clear          = __webpack_require__(196)
-	  , eIndexOf       = __webpack_require__(197)
-	  , setPrototypeOf = __webpack_require__(203)
-	  , callable       = __webpack_require__(208)
-	  , d              = __webpack_require__(110)
-	  , ee             = __webpack_require__(209)
-	  , Symbol         = __webpack_require__(107)
-	  , iterator       = __webpack_require__(210)
-	  , forOf          = __webpack_require__(214)
-	  , Iterator       = __webpack_require__(224)
-	  , isNative       = __webpack_require__(225)
+	var clear          = __webpack_require__(195)
+	  , eIndexOf       = __webpack_require__(196)
+	  , setPrototypeOf = __webpack_require__(202)
+	  , callable       = __webpack_require__(207)
+	  , d              = __webpack_require__(108)
+	  , ee             = __webpack_require__(208)
+	  , Symbol         = __webpack_require__(105)
+	  , iterator       = __webpack_require__(209)
+	  , forOf          = __webpack_require__(213)
+	  , Iterator       = __webpack_require__(223)
+	  , isNative       = __webpack_require__(224)
 
 	  , call = Function.prototype.call
 	  , defineProperty = Object.defineProperty, getPrototypeOf = Object.getPrototypeOf
@@ -7578,7 +8023,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 196 */
+/* 195 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Inspired by Google Closure:
@@ -7587,7 +8032,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var value = __webpack_require__(117);
+	var value = __webpack_require__(115);
 
 	module.exports = function () {
 		value(this).length = 0;
@@ -7596,13 +8041,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 197 */
+/* 196 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toPosInt = __webpack_require__(198)
-	  , value    = __webpack_require__(117)
+	var toPosInt = __webpack_require__(197)
+	  , value    = __webpack_require__(115)
 
 	  , indexOf = Array.prototype.indexOf
 	  , hasOwnProperty = Object.prototype.hasOwnProperty
@@ -7631,12 +8076,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 198 */
+/* 197 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toInteger = __webpack_require__(199)
+	var toInteger = __webpack_require__(198)
 
 	  , max = Math.max;
 
@@ -7644,12 +8089,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 199 */
+/* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var sign = __webpack_require__(200)
+	var sign = __webpack_require__(199)
 
 	  , abs = Math.abs, floor = Math.floor;
 
@@ -7662,18 +8107,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 200 */
+/* 199 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(201)()
+	module.exports = __webpack_require__(200)()
 		? Math.sign
-		: __webpack_require__(202);
+		: __webpack_require__(201);
 
 
 /***/ },
-/* 201 */
+/* 200 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7686,7 +8131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 202 */
+/* 201 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7699,18 +8144,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 203 */
+/* 202 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(204)()
+	module.exports = __webpack_require__(203)()
 		? Object.setPrototypeOf
-		: __webpack_require__(205);
+		: __webpack_require__(204);
 
 
 /***/ },
-/* 204 */
+/* 203 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7727,7 +8172,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 205 */
+/* 204 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Big thanks to @WebReflection for sorting this out
@@ -7735,8 +8180,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var isObject      = __webpack_require__(206)
-	  , value         = __webpack_require__(117)
+	var isObject      = __webpack_require__(205)
+	  , value         = __webpack_require__(115)
 
 	  , isPrototypeOf = Object.prototype.isPrototypeOf
 	  , defineProperty = Object.defineProperty
@@ -7802,11 +8247,11 @@ return /******/ (function(modules) { // webpackBootstrap
 		return false;
 	}())));
 
-	__webpack_require__(207);
+	__webpack_require__(206);
 
 
 /***/ },
-/* 206 */
+/* 205 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7819,7 +8264,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 207 */
+/* 206 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Workaround for http://code.google.com/p/v8/issues/detail?id=2804
@@ -7828,8 +8273,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var create = Object.create, shim;
 
-	if (!__webpack_require__(204)()) {
-		shim = __webpack_require__(205);
+	if (!__webpack_require__(203)()) {
+		shim = __webpack_require__(204);
 	}
 
 	module.exports = (function () {
@@ -7861,7 +8306,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 208 */
+/* 207 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7873,13 +8318,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 209 */
+/* 208 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var d        = __webpack_require__(110)
-	  , callable = __webpack_require__(208)
+	var d        = __webpack_require__(108)
+	  , callable = __webpack_require__(207)
 
 	  , apply = Function.prototype.apply, call = Function.prototype.call
 	  , create = Object.create, defineProperty = Object.defineProperty
@@ -8011,12 +8456,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 210 */
+/* 209 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isIterable = __webpack_require__(211);
+	var isIterable = __webpack_require__(210);
 
 	module.exports = function (value) {
 		if (!isIterable(value)) throw new TypeError(value + " is not iterable");
@@ -8025,14 +8470,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 211 */
+/* 210 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isArguments    = __webpack_require__(212)
-	  , isString       = __webpack_require__(213)
-	  , iteratorSymbol = __webpack_require__(107).iterator
+	var isArguments    = __webpack_require__(211)
+	  , isString       = __webpack_require__(212)
+	  , iteratorSymbol = __webpack_require__(105).iterator
 
 	  , isArray = Array.isArray;
 
@@ -8046,7 +8491,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 212 */
+/* 211 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -8059,7 +8504,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 213 */
+/* 212 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -8075,15 +8520,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 214 */
+/* 213 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isArguments = __webpack_require__(212)
-	  , callable    = __webpack_require__(208)
-	  , isString    = __webpack_require__(213)
-	  , get         = __webpack_require__(215)
+	var isArguments = __webpack_require__(211)
+	  , callable    = __webpack_require__(207)
+	  , isString    = __webpack_require__(212)
+	  , get         = __webpack_require__(214)
 
 	  , isArray = Array.isArray, call = Function.prototype.call
 	  , some = Array.prototype.some;
@@ -8127,17 +8572,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 215 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isArguments    = __webpack_require__(212)
-	  , isString       = __webpack_require__(213)
-	  , ArrayIterator  = __webpack_require__(216)
-	  , StringIterator = __webpack_require__(223)
-	  , iterable       = __webpack_require__(210)
-	  , iteratorSymbol = __webpack_require__(107).iterator;
+	var isArguments    = __webpack_require__(211)
+	  , isString       = __webpack_require__(212)
+	  , ArrayIterator  = __webpack_require__(215)
+	  , StringIterator = __webpack_require__(222)
+	  , iterable       = __webpack_require__(209)
+	  , iteratorSymbol = __webpack_require__(105).iterator;
 
 	module.exports = function (obj) {
 		if (typeof iterable(obj)[iteratorSymbol] === 'function') return obj[iteratorSymbol]();
@@ -8148,15 +8593,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 216 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var setPrototypeOf = __webpack_require__(203)
-	  , contains       = __webpack_require__(120)
-	  , d              = __webpack_require__(110)
-	  , Iterator       = __webpack_require__(217)
+	var setPrototypeOf = __webpack_require__(202)
+	  , contains       = __webpack_require__(118)
+	  , d              = __webpack_require__(108)
+	  , Iterator       = __webpack_require__(216)
 
 	  , defineProperty = Object.defineProperty
 	  , ArrayIterator;
@@ -8184,18 +8629,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 217 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var clear    = __webpack_require__(196)
-	  , assign   = __webpack_require__(111)
-	  , callable = __webpack_require__(208)
-	  , value    = __webpack_require__(117)
-	  , d        = __webpack_require__(110)
-	  , autoBind = __webpack_require__(218)
-	  , Symbol   = __webpack_require__(107)
+	var clear    = __webpack_require__(195)
+	  , assign   = __webpack_require__(109)
+	  , callable = __webpack_require__(207)
+	  , value    = __webpack_require__(115)
+	  , d        = __webpack_require__(108)
+	  , autoBind = __webpack_require__(217)
+	  , Symbol   = __webpack_require__(105)
 
 	  , defineProperty = Object.defineProperty
 	  , defineProperties = Object.defineProperties
@@ -8280,15 +8725,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 218 */
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var copy       = __webpack_require__(219)
-	  , map        = __webpack_require__(220)
-	  , callable   = __webpack_require__(208)
-	  , validValue = __webpack_require__(117)
+	var copy       = __webpack_require__(218)
+	  , map        = __webpack_require__(219)
+	  , callable   = __webpack_require__(207)
+	  , validValue = __webpack_require__(115)
 
 	  , bind = Function.prototype.bind, defineProperty = Object.defineProperty
 	  , hasOwnProperty = Object.prototype.hasOwnProperty
@@ -8317,13 +8762,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 219 */
+/* 218 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var assign = __webpack_require__(111)
-	  , value  = __webpack_require__(117);
+	var assign = __webpack_require__(109)
+	  , value  = __webpack_require__(115);
 
 	module.exports = function (obj) {
 		var copy = Object(value(obj));
@@ -8333,13 +8778,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 220 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var callable = __webpack_require__(208)
-	  , forEach  = __webpack_require__(221)
+	var callable = __webpack_require__(207)
+	  , forEach  = __webpack_require__(220)
 
 	  , call = Function.prototype.call;
 
@@ -8354,16 +8799,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 221 */
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(222)('forEach');
+	module.exports = __webpack_require__(221)('forEach');
 
 
 /***/ },
-/* 222 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Internal method, used by iteration functions.
@@ -8372,8 +8817,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var callable = __webpack_require__(208)
-	  , value    = __webpack_require__(117)
+	var callable = __webpack_require__(207)
+	  , value    = __webpack_require__(115)
 
 	  , bind = Function.prototype.bind, call = Function.prototype.call, keys = Object.keys
 	  , propertyIsEnumerable = Object.prototype.propertyIsEnumerable;
@@ -8398,7 +8843,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 223 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Thanks @mathiasbynens
@@ -8406,9 +8851,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var setPrototypeOf = __webpack_require__(203)
-	  , d              = __webpack_require__(110)
-	  , Iterator       = __webpack_require__(217)
+	var setPrototypeOf = __webpack_require__(202)
+	  , d              = __webpack_require__(108)
+	  , Iterator       = __webpack_require__(216)
 
 	  , defineProperty = Object.defineProperty
 	  , StringIterator;
@@ -8441,16 +8886,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 224 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var setPrototypeOf    = __webpack_require__(203)
-	  , contains          = __webpack_require__(120)
-	  , d                 = __webpack_require__(110)
-	  , Iterator          = __webpack_require__(217)
-	  , toStringTagSymbol = __webpack_require__(107).toStringTag
+	var setPrototypeOf    = __webpack_require__(202)
+	  , contains          = __webpack_require__(118)
+	  , d                 = __webpack_require__(108)
+	  , Iterator          = __webpack_require__(216)
+	  , toStringTagSymbol = __webpack_require__(105).toStringTag
 
 	  , defineProperty = Object.defineProperty
 	  , SetIterator;
@@ -8477,7 +8922,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 225 */
+/* 224 */
 /***/ function(module, exports) {
 
 	// Exports true if environment provides native `Set` implementation,
@@ -8492,16 +8937,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 226 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(227)() ? Map : __webpack_require__(228);
+	module.exports = __webpack_require__(226)() ? Map : __webpack_require__(227);
 
 
 /***/ },
-/* 227 */
+/* 226 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -8539,23 +8984,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 228 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var clear          = __webpack_require__(196)
-	  , eIndexOf       = __webpack_require__(197)
-	  , setPrototypeOf = __webpack_require__(203)
-	  , callable       = __webpack_require__(208)
-	  , validValue     = __webpack_require__(117)
-	  , d              = __webpack_require__(110)
-	  , ee             = __webpack_require__(209)
-	  , Symbol         = __webpack_require__(107)
-	  , iterator       = __webpack_require__(210)
-	  , forOf          = __webpack_require__(214)
-	  , Iterator       = __webpack_require__(229)
-	  , isNative       = __webpack_require__(232)
+	var clear          = __webpack_require__(195)
+	  , eIndexOf       = __webpack_require__(196)
+	  , setPrototypeOf = __webpack_require__(202)
+	  , callable       = __webpack_require__(207)
+	  , validValue     = __webpack_require__(115)
+	  , d              = __webpack_require__(108)
+	  , ee             = __webpack_require__(208)
+	  , Symbol         = __webpack_require__(105)
+	  , iterator       = __webpack_require__(209)
+	  , forOf          = __webpack_require__(213)
+	  , Iterator       = __webpack_require__(228)
+	  , isNative       = __webpack_require__(231)
 
 	  , call = Function.prototype.call
 	  , defineProperties = Object.defineProperties, getPrototypeOf = Object.getPrototypeOf
@@ -8649,16 +9094,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 229 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var setPrototypeOf    = __webpack_require__(203)
-	  , d                 = __webpack_require__(110)
-	  , Iterator          = __webpack_require__(217)
-	  , toStringTagSymbol = __webpack_require__(107).toStringTag
-	  , kinds             = __webpack_require__(230)
+	var setPrototypeOf    = __webpack_require__(202)
+	  , d                 = __webpack_require__(108)
+	  , Iterator          = __webpack_require__(216)
+	  , toStringTagSymbol = __webpack_require__(105).toStringTag
+	  , kinds             = __webpack_require__(229)
 
 	  , defineProperties = Object.defineProperties
 	  , unBind = Iterator.prototype._unBind
@@ -8693,17 +9138,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 230 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(231)('key',
+	module.exports = __webpack_require__(230)('key',
 		'value', 'key+value');
 
 
 /***/ },
-/* 231 */
+/* 230 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -8718,7 +9163,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 232 */
+/* 231 */
 /***/ function(module, exports) {
 
 	// Exports true if environment provides native `Map` implementation,
@@ -8733,16 +9178,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 233 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-	var Set = __webpack_require__(193);
-	var Map = __webpack_require__(226);
-	var mopsSymbol = __webpack_require__(106);
+	var Set = __webpack_require__(192);
+	var Map = __webpack_require__(225);
+	var mopsSymbol = __webpack_require__(104);
 
 	module.exports = Operation;
 
@@ -8965,16 +9410,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 234 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isError = __webpack_require__(235);
+	var isError = __webpack_require__(234);
 	var isObject = __webpack_require__(3);
-	var wrap = __webpack_require__(236);
-	var Promise = __webpack_require__(102).Promise;
-	var mopsSymbol = __webpack_require__(106);
+	var wrap = __webpack_require__(235);
+
+	var _require = __webpack_require__(102);
+
+	var Promise = _require.Promise;
+
+	var mopsSymbol = __webpack_require__(104);
 
 	module.exports = Action;
 
@@ -9035,7 +9484,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 235 */
+/* 234 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObjectLike = __webpack_require__(27);
@@ -9083,11 +9532,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 236 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var identity = __webpack_require__(50),
-	    partial = __webpack_require__(237);
+	    partial = __webpack_require__(236);
 
 	/**
 	 * Creates a function that provides `value` to `wrapper` as its first
@@ -9120,7 +9569,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 237 */
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseRest = __webpack_require__(49),
@@ -9176,12 +9625,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 238 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toString = __webpack_require__(191);
+	var toString = __webpack_require__(190);
 
 	module.exports = MopsError;
 

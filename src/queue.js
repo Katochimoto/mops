@@ -9,7 +9,7 @@ const { isFunction, isUndefined, toArray, partialRight } = require('lodash');
 /* @endif */
 
 const invariant = require('invariant');
-const Promise = require('es6-promise').Promise;
+const { Promise } = require('vow');
 const mopsSymbol = require('./symbol');
 const Context = require('./context');
 const Action = require('./action');

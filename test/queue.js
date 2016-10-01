@@ -1,6 +1,6 @@
 const assert = require('chai').assert;
 const sinon = require('sinon');
-const Promise = require('es6-promise').Promise;
+const { Promise } = require('vow');
 
 const mops = require('../src/mops');
 
