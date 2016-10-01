@@ -7550,6 +7550,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this[mopsSymbol.CHECKED].has(obj);
 	};
 
+	/**
+	 * @param {Checked} checked
+	 * @returns {boolean}
+	 */
+	Checked.prototype.includes = function (checked) {
+	    var _this = this;
+
+	    return checked.toArray().some(function (item) {
+	        return _this.has(item);
+	    });
+	};
+
 	Checked.prototype.clear = function () {
 	    this[mopsSymbol.CHECKED].clear();
 	};

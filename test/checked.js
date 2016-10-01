@@ -263,4 +263,41 @@ describe('Checked', function () {
             assert.instanceOf(items, mops.Checked, '#getCheckedGroups() is an instance of mops.Checked');
         });
     });
+
+    describe('#includes', function () {
+        it('должен вернуть true, если наборы пересекаются', function () {
+            let o1 = {};
+            let o2 = {};
+            let o3 = {};
+
+            let checked1 = new mops.Checked();
+            checked1.check(o1);
+            checked1.check(o2);
+
+            let checked2 = new mops.Checked();
+            checked2.check(o1);
+            checked2.check(o3);
+
+            assert.isOk(checked1.includes(checked2));
+            assert.isOk(checked2.includes(checked1));
+        });
+
+        it('должен вернуть false, если наборы не пересекаются', function () {
+            let o1 = {};
+            let o2 = {};
+            let o3 = {};
+            let o4 = {};
+
+            let checked1 = new mops.Checked();
+            checked1.check(o1);
+            checked1.check(o2);
+
+            let checked2 = new mops.Checked();
+            checked2.check(o3);
+            checked2.check(o4);
+
+            assert.isNotOk(checked1.includes(checked2));
+            assert.isNotOk(checked2.includes(checked1));
+        });
+    });
 });

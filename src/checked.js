@@ -43,6 +43,14 @@ Checked.prototype.has = function (obj) {
     return this[ mopsSymbol.CHECKED ].has(obj);
 };
 
+/**
+ * @param {Checked} checked
+ * @returns {boolean}
+ */
+Checked.prototype.includes = function (checked) {
+    return checked.toArray().some(item => this.has(item));
+};
+
 Checked.prototype.clear = function () {
     this[ mopsSymbol.CHECKED ].clear();
 };
