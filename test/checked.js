@@ -27,6 +27,14 @@ describe('Checked', function () {
 
             assert.isOk(checked.has(o1));
         });
+
+        it('можно создать из другого набора Checked', function () {
+            let o1 = {};
+            let checked1 = new mops.Checked(o1);
+            let checked2 = new mops.Checked(checked1);
+
+            assert.isOk(checked2.has(o1));
+        });
     });
 
     describe('#clear()', function () {

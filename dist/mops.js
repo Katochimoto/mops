@@ -7653,7 +7653,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var out = void 0;
 
-	    if (isSet(data)) {
+	    if (data instanceof Checked) {
+	        out = new Set(data.toArray());
+	    } else if (isSet(data)) {
 	        out = data;
 	    } else if (toString(data) === '[object Set]') {
 	        out = new Set(setToArray(data));

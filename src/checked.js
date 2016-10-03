@@ -146,7 +146,10 @@ function toSet(data) {
 
     let out;
 
-    if (isSet(data)) {
+    if (data instanceof Checked) {
+        out = new Set(data.toArray());
+
+    } else if (isSet(data)) {
         out = data;
 
     } else if (toString(data) === '[object Set]') {
