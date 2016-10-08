@@ -1,8 +1,9 @@
 /* @ifdef LODASH */
+const isFunction = require('lodash/isFunction');
 const toString = require('lodash/toString');
 /* @endif */
 /* @ifdef NOLODASH **
-const { toString } = require('lodash');
+const { isFunction, toString } = require('lodash');
 /* @endif */
 
 const Set = require('es6-set');
@@ -31,13 +32,12 @@ Operation.prototype.add = function (action, ...args) {
     return true;
 };
 
-Operation.prototype.addUniq = function (action, args, uniq) {
-    uniq = uniq || toString(args) || 'undefined';
-    args = [ args ];
-    const group = this[ mopsSymbol.ACTION_GROUP ];
-    const groupAction = group.get(action);
+Operation.prototype.addUniq = function (action, ...args) {
+    const len = args.length;
+    const resolver = len > 1 && isFunction(args[ len - 1 ]) ? args.pop() : null;
+    const cacheKey = resolver && resolver(...args) || toString(args) || 'default';
 
-    if (groupAction && groupAction.has(uniq)) {
+    if (checkUniq(this[ mopsSymbol.ACTION_GROUP ], action, cacheKey)) {
         return false;
     }
 
@@ -45,13 +45,16 @@ Operation.prototype.addUniq = function (action, args, uniq) {
         return false;
     }
 
-    this[ mopsSymbol.OPERATION ].push([ action, args, uniq ]);
+    this[ mopsSymbol.OPERATION ].push([ action, args, cacheKey ]);
+
+    const group = this[ mopsSymbol.ACTION_GROUP ];
+    const groupAction = group.get(action);
 
     if (groupAction) {
-        groupAction.add(uniq);
+        groupAction.add(cacheKey);
 
     } else {
-        group.set(action, new Set([ uniq ]));
+        group.set(action, new Set([ cacheKey ]));
     }
 };
 
@@ -230,23 +233,23 @@ function checkLock(lock, action, args) {
     return checkers === null;
 }
 
-function checkUniq(group, action, uniq) {
-    if (!uniq) {
+function checkUniq(group, action, cacheKey) {
+    if (!cacheKey) {
         return false;
     }
 
-    const uniqs = group.get(action);
-    return uniqs && uniqs.has(uniq) || false;
+    const cache = group.get(action);
+    return cache && cache.has(cacheKey) || false;
 }
 
-function groupIterator(uniqs, action) {
+function groupIterator(cache, action) {
     const group = this.get(action);
 
     if (group) {
-        uniqs.forEach(item => group.add(item));
+        cache.forEach(item => group.add(item));
 
     } else {
-        this.set(action, uniqs);
+        this.set(action, cache);
     }
 }
 

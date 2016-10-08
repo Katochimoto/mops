@@ -44,6 +44,30 @@ describe('Operation', function () {
 
             assert.equal(operations.size(action), 2);
         });
+
+        it('если аргументов больше 1 и последний функция, то это функция формирования ключа', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.addUniq(action, 'arg1', 'arg2', function () { return 'a'; });
+            operations.addUniq(action, 'arg2', function () { return 'a'; });
+            operations.addUniq(action, 'arg3', function () { return 'b'; });
+            operations.addUniq(action, 'arg4', function () { return 'b'; });
+
+            assert.equal(operations.size(action), 2);
+        });
+
+        it('если нет функции формирования ключа, ключ строится по аргументам', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.addUniq(action, 1, 2);
+            operations.addUniq(action, 1, 2);
+            operations.addUniq(action, 2, 1);
+            operations.addUniq(action, 2, 1);
+
+            assert.equal(operations.size(action), 2);
+        });
     });
 
     describe('#add', function () {

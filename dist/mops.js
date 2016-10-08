@@ -9341,6 +9341,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+	var isFunction = __webpack_require__(2);
 	var toString = __webpack_require__(192);
 
 	var Set = __webpack_require__(194);
@@ -9373,13 +9374,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return true;
 	};
 
-	Operation.prototype.addUniq = function (action, args, uniq) {
-	    uniq = uniq || toString(args) || 'undefined';
-	    args = [args];
-	    var group = this[mopsSymbol.ACTION_GROUP];
-	    var groupAction = group.get(action);
+	Operation.prototype.addUniq = function (action) {
+	    for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+	        args[_key2 - 1] = arguments[_key2];
+	    }
 
-	    if (groupAction && groupAction.has(uniq)) {
+	    var len = args.length;
+	    var resolver = len > 1 && isFunction(args[len - 1]) ? args.pop() : null;
+	    var cacheKey = resolver && resolver.apply(undefined, args) || toString(args) || 'default';
+
+	    if (checkUniq(this[mopsSymbol.ACTION_GROUP], action, cacheKey)) {
 	        return false;
 	    }
 
@@ -9387,12 +9391,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return false;
 	    }
 
-	    this[mopsSymbol.OPERATION].push([action, args, uniq]);
+	    this[mopsSymbol.OPERATION].push([action, args, cacheKey]);
+
+	    var group = this[mopsSymbol.ACTION_GROUP];
+	    var groupAction = group.get(action);
 
 	    if (groupAction) {
-	        groupAction.add(uniq);
+	        groupAction.add(cacheKey);
 	    } else {
-	        group.set(action, new Set([uniq]));
+	        group.set(action, new Set([cacheKey]));
 	    }
 	};
 
@@ -9581,24 +9588,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return checkers === null;
 	}
 
-	function checkUniq(group, action, uniq) {
-	    if (!uniq) {
+	function checkUniq(group, action, cacheKey) {
+	    if (!cacheKey) {
 	        return false;
 	    }
 
-	    var uniqs = group.get(action);
-	    return uniqs && uniqs.has(uniq) || false;
+	    var cache = group.get(action);
+	    return cache && cache.has(cacheKey) || false;
 	}
 
-	function groupIterator(uniqs, action) {
+	function groupIterator(cache, action) {
 	    var group = this.get(action);
 
 	    if (group) {
-	        uniqs.forEach(function (item) {
+	        cache.forEach(function (item) {
 	            return group.add(item);
 	        });
 	    } else {
-	        this.set(action, uniqs);
+	        this.set(action, cache);
 	    }
 	}
 
