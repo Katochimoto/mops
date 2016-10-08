@@ -13,6 +13,39 @@ describe('Operation', function () {
         delete this.sinon;
     });
 
+    describe('#addUniq', function () {
+        it('должен добавить действие', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.addUniq(action);
+
+            assert.equal(operations.size(action), 1);
+        });
+
+        it('действие с одинаковыми аргументами при добавлении не создает новые операции', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.addUniq(action, 'args');
+            operations.addUniq(action, 'args');
+
+            assert.equal(operations.size(action), 1);
+        });
+
+        it('действие с разными аргументами создает новые операции', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.addUniq(action, 'args1');
+            operations.addUniq(action, 'args1');
+            operations.addUniq(action, 'args2');
+            operations.addUniq(action, 'args2');
+
+            assert.equal(operations.size(action), 2);
+        });
+    });
+
     describe('#add', function () {
         it('должен добавить действие', function () {
             let action = function () {};
@@ -123,11 +156,31 @@ describe('Operation', function () {
             assert.equal(operations.size(action), 0);
         });
 
+        it('заблокированное действие нельзя добавить уникальным', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.lock(action);
+            operations.addUniq(action);
+
+            assert.equal(operations.size(action), 0);
+        });
+
         it('ранее добавленное заблокированное действие должно быть удалено', function () {
             let action = function () {};
             let operations = new mops.Operation();
 
             operations.add(action);
+            operations.lock(action);
+
+            assert.equal(operations.size(action), 0);
+        });
+
+        it('ранее добавленное заблокированное действие должно быть удалено', function () {
+            let action = function () {};
+            let operations = new mops.Operation();
+
+            operations.addUniq(action);
             operations.lock(action);
 
             assert.equal(operations.size(action), 0);
@@ -241,6 +294,30 @@ describe('Operation', function () {
     });
 
     describe('#merge', function () {
+        it('должно объединить правила уникальности', function () {
+            let action = function () {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.addUniq(action);
+            operations2.merge(operations1);
+            operations2.addUniq(action);
+
+            assert.equal(operations2.size(action), 1);
+        });
+
+        it('должно оставить только одну уникальную операцию', function () {
+            let action = function () {};
+            let operations1 = new mops.Operation();
+            let operations2 = new mops.Operation();
+
+            operations1.addUniq(action);
+            operations2.addUniq(action);
+            operations2.merge(operations1);
+
+            assert.equal(operations2.size(action), 1);
+        });
+
         it('должно объединить блокироваки действий', function () {
             let action1 = function () {};
             let action2 = function () {};

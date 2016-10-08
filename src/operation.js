@@ -1,3 +1,10 @@
+/* @ifdef LODASH */
+const toString = require('lodash/toString');
+/* @endif */
+/* @ifdef NOLODASH **
+const { toString } = require('lodash');
+/* @endif */
+
 const Set = require('es6-set');
 const Map = require('es6-map');
 const mopsSymbol = require('./symbol');
@@ -12,6 +19,7 @@ const slice = Array.prototype.slice;
 function Operation() {
     Object.defineProperty(this, mopsSymbol.OPERATION, { value: [] });
     Object.defineProperty(this, mopsSymbol.ACTION_LOCK, { value: new Map() });
+    Object.defineProperty(this, mopsSymbol.ACTION_GROUP, { value: new Map() });
 }
 
 Operation.prototype.add = function (action, ...args) {
@@ -23,6 +31,30 @@ Operation.prototype.add = function (action, ...args) {
     return true;
 };
 
+Operation.prototype.addUniq = function (action, args, uniq) {
+    uniq = uniq || toString(args) || 'undefined';
+    args = [ args ];
+    const group = this[ mopsSymbol.ACTION_GROUP ];
+    const groupAction = group.get(action);
+
+    if (groupAction && groupAction.has(uniq)) {
+        return false;
+    }
+
+    if (checkLock(this[ mopsSymbol.ACTION_LOCK ], action, args)) {
+        return false;
+    }
+
+    this[ mopsSymbol.OPERATION ].push([ action, args, uniq ]);
+
+    if (groupAction) {
+        groupAction.add(uniq);
+
+    } else {
+        group.set(action, new Set([ uniq ]));
+    }
+};
+
 Operation.prototype.has = function (action) {
     return this[ mopsSymbol.OPERATION ].some(item => item[0] === action);
 };
@@ -30,6 +62,7 @@ Operation.prototype.has = function (action) {
 Operation.prototype.clear = function () {
     this[ mopsSymbol.OPERATION ].length = 0;
     this[ mopsSymbol.ACTION_LOCK ].clear();
+    this[ mopsSymbol.ACTION_GROUP ].clear();
 };
 
 /**
@@ -112,10 +145,12 @@ Operation.prototype.merge = function (data) {
         return false;
     }
 
+    const group = this[ mopsSymbol.ACTION_GROUP ];
     const lock = this[ mopsSymbol.ACTION_LOCK ];
     const oper = this[ mopsSymbol.OPERATION ];
-    const operSource = data[ mopsSymbol.OPERATION ];
+    const groupSource = data[ mopsSymbol.ACTION_GROUP ];
     const lockSource = data[ mopsSymbol.ACTION_LOCK ];
+    const operSource = data[ mopsSymbol.OPERATION ];
 
     let i = 0;
     while (i < oper.length) {
@@ -131,25 +166,15 @@ Operation.prototype.merge = function (data) {
     const lenSource = operSource.length;
     for (i = 0; i < lenSource; i++) {
         const item = operSource[ i ];
-        if (!checkLock(lock, item[0], item[1])) {
+        if (!checkLock(lock, item[0], item[1]) &&
+            !checkUniq(group, item[0], item[2])) {
+
             oper.push(item);
         }
     }
 
-    lockSource.forEach(function (checkers, action) {
-        if (checkers === null) {
-            lock.set(action, checkers);
-
-        } else {
-            const lockCheckers = lock.get(action);
-            if (lockCheckers) {
-                checkers.forEach(checker => lockCheckers.add(checker));
-
-            } else {
-                lock.set(action, checkers);
-            }
-        }
-    });
+    lockSource.forEach(lockIterator, lock);
+    groupSource.forEach(groupIterator, group);
 
     data.clear();
 
@@ -203,4 +228,40 @@ function checkLock(lock, action, args) {
     }
 
     return checkers === null;
+}
+
+function checkUniq(group, action, uniq) {
+    if (!uniq) {
+        return false;
+    }
+
+    const uniqs = group.get(action);
+    return uniqs && uniqs.has(uniq) || false;
+}
+
+function groupIterator(uniqs, action) {
+    const group = this.get(action);
+
+    if (group) {
+        uniqs.forEach(item => group.add(item));
+
+    } else {
+        this.set(action, uniqs);
+    }
+}
+
+function lockIterator(checkers, action) {
+    if (checkers === null) {
+        this.set(action, checkers);
+
+    } else {
+        const lock = this.get(action);
+
+        if (lock) {
+            checkers.forEach(checker => lock.add(checker));
+
+        } else {
+            this.set(action, checkers);
+        }
+    }
 }

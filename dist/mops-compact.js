@@ -465,6 +465,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.CHECKED = _Symbol('mops-checked');
 	exports.OPERATION = _Symbol('mops-operation');
 	exports.ACTION_LOCK = _Symbol('mops-action-lock');
+	exports.ACTION_GROUP = _Symbol('mops-action-group');
 
 /***/ },
 /* 7 */
@@ -2403,6 +2404,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+	var _require = __webpack_require__(2);
+
+	var toString = _require.toString;
+
+
 	var Set = __webpack_require__(27);
 	var Map = __webpack_require__(60);
 	var mopsSymbol = __webpack_require__(6);
@@ -2417,6 +2423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function Operation() {
 	    Object.defineProperty(this, mopsSymbol.OPERATION, { value: [] });
 	    Object.defineProperty(this, mopsSymbol.ACTION_LOCK, { value: new Map() });
+	    Object.defineProperty(this, mopsSymbol.ACTION_GROUP, { value: new Map() });
 	}
 
 	Operation.prototype.add = function (action) {
@@ -2432,6 +2439,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return true;
 	};
 
+	Operation.prototype.addUniq = function (action, args, uniq) {
+	    uniq = uniq || toString(args) || 'undefined';
+	    args = [args];
+	    var group = this[mopsSymbol.ACTION_GROUP];
+	    var groupAction = group.get(action);
+
+	    if (groupAction && groupAction.has(uniq)) {
+	        return false;
+	    }
+
+	    if (checkLock(this[mopsSymbol.ACTION_LOCK], action, args)) {
+	        return false;
+	    }
+
+	    this[mopsSymbol.OPERATION].push([action, args, uniq]);
+
+	    if (groupAction) {
+	        groupAction.add(uniq);
+	    } else {
+	        group.set(action, new Set([uniq]));
+	    }
+	};
+
 	Operation.prototype.has = function (action) {
 	    return this[mopsSymbol.OPERATION].some(function (item) {
 	        return item[0] === action;
@@ -2441,6 +2471,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Operation.prototype.clear = function () {
 	    this[mopsSymbol.OPERATION].length = 0;
 	    this[mopsSymbol.ACTION_LOCK].clear();
+	    this[mopsSymbol.ACTION_GROUP].clear();
 	};
 
 	/**
@@ -2520,10 +2551,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return false;
 	    }
 
+	    var group = this[mopsSymbol.ACTION_GROUP];
 	    var lock = this[mopsSymbol.ACTION_LOCK];
 	    var oper = this[mopsSymbol.OPERATION];
-	    var operSource = data[mopsSymbol.OPERATION];
+	    var groupSource = data[mopsSymbol.ACTION_GROUP];
 	    var lockSource = data[mopsSymbol.ACTION_LOCK];
+	    var operSource = data[mopsSymbol.OPERATION];
 
 	    var i = 0;
 	    while (i < oper.length) {
@@ -2538,27 +2571,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var lenSource = operSource.length;
 	    for (i = 0; i < lenSource; i++) {
 	        var _item = operSource[i];
-	        if (!checkLock(lock, _item[0], _item[1])) {
+	        if (!checkLock(lock, _item[0], _item[1]) && !checkUniq(group, _item[0], _item[2])) {
+
 	            oper.push(_item);
 	        }
 	    }
 
-	    lockSource.forEach(function (checkers, action) {
-	        if (checkers === null) {
-	            lock.set(action, checkers);
-	        } else {
-	            (function () {
-	                var lockCheckers = lock.get(action);
-	                if (lockCheckers) {
-	                    checkers.forEach(function (checker) {
-	                        return lockCheckers.add(checker);
-	                    });
-	                } else {
-	                    lock.set(action, checkers);
-	                }
-	            })();
-	        }
-	    });
+	    lockSource.forEach(lockIterator, lock);
+	    groupSource.forEach(groupIterator, group);
 
 	    data.clear();
 
@@ -2582,7 +2602,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return {
 	        next: function next() {
 	            if (nextIndex < array.length) {
-	                var _ret2 = function () {
+	                var _ret = function () {
 	                    var item = array[nextIndex++];
 
 	                    return {
@@ -2595,7 +2615,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    };
 	                }();
 
-	                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+	                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
 	            } else {
 	                return { done: true };
 	            }
@@ -2607,7 +2627,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var checkers = lock.get(action);
 
 	    if (checkers) {
-	        var _ret3 = function () {
+	        var _ret2 = function () {
 	            var isLock = false;
 
 	            checkers.forEach(function (checker) {
@@ -2621,10 +2641,51 @@ return /******/ (function(modules) { // webpackBootstrap
 	            };
 	        }();
 
-	        if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
+	        if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
 	    }
 
 	    return checkers === null;
+	}
+
+	function checkUniq(group, action, uniq) {
+	    if (!uniq) {
+	        return false;
+	    }
+
+	    var uniqs = group.get(action);
+	    return uniqs && uniqs.has(uniq) || false;
+	}
+
+	function groupIterator(uniqs, action) {
+	    var group = this.get(action);
+
+	    if (group) {
+	        uniqs.forEach(function (item) {
+	            return group.add(item);
+	        });
+	    } else {
+	        this.set(action, uniqs);
+	    }
+	}
+
+	function lockIterator(checkers, action) {
+	    var _this = this;
+
+	    if (checkers === null) {
+	        this.set(action, checkers);
+	    } else {
+	        (function () {
+	            var lock = _this.get(action);
+
+	            if (lock) {
+	                checkers.forEach(function (checker) {
+	                    return lock.add(checker);
+	                });
+	            } else {
+	                _this.set(action, checkers);
+	            }
+	        })();
+	    }
 	}
 
 /***/ },
