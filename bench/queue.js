@@ -9,21 +9,19 @@
         }
     });
 
+    var queue = new mops.Queue();
+    for (var i = 0; i < 10000; i++) {
+        queue.then(function () {});
+    }
+
     suite
     .add('mops.Queue#start', function(deferred) {
-        this.queue
+        queue
             .start()
             .then(function () { deferred.resolve(); });
 
     }, {
-        defer: true,
-
-        onStart: function() {
-            this.queue = new mops.Queue();
-            for (var i = 0; i < 10000; i++) {
-                this.queue.then(function () {});
-            }
-        }
+        defer: true
     });
 
     suite.run({ async: true, queued: true });

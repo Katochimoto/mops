@@ -14,151 +14,49 @@
         objects.push({ obj: i });
     }
 
+    var checked = new mops.Checked(objects);
+
     suite
     .add('mops.Checked#getCheckedGroups с произвольными группами', function() {
-        this.checked.getCheckedGroups(getGroups);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getCheckedGroups(getGroups);
     })
     .add('mops.Checked#getCheckedGroups с произвольным количеством (от 0 до 5) произвольных групп', function() {
-        this.checked.getCheckedGroups(getGroupsRandon);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getCheckedGroups(getGroupsRandon);
     })
     .add('mops.Checked#getCheckedGroups без групп', function() {
-        this.checked.getCheckedGroups(getGroupsEmpty);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getCheckedGroups(getGroupsEmpty);
     })
     .add('mops.Checked#getCheckedGroups с исходным объектом в виде группы', function() {
-        this.checked.getCheckedGroups(getGroupsSelf);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getCheckedGroups(getGroupsSelf);
     })
     .add('mops.Checked#getCheckedGroups с двумя постоянно разными группами', function() {
-        this.checked.getCheckedGroups(getGroupsOther);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getCheckedGroups(getGroupsOther);
     })
     .add('mops.Checked#getCheckedGroups с одной общей группой', function() {
-        this.checked.getCheckedGroups(getGroupsOne);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getCheckedGroups(getGroupsOne);
     })
 
     .add('mops.Checked#getGroups с произвольными группами', function() {
-        this.checked.getGroups(getGroups);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getGroups(getGroups);
     })
     .add('mops.Checked#getGroups с произвольным количеством (от 0 до 5) произвольных групп', function() {
-        this.checked.getGroups(getGroupsRandon);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getGroups(getGroupsRandon);
     })
     .add('mops.Checked#getGroups без групп', function() {
-        this.checked.getGroups(getGroupsEmpty);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getGroups(getGroupsEmpty);
     })
     .add('mops.Checked#getGroups с исходным объектом в виде группы', function() {
-        this.checked.getGroups(getGroupsSelf);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getGroups(getGroupsSelf);
     })
     .add('mops.Checked#getGroups с двумя постоянно разными группами', function() {
-        this.checked.getGroups(getGroupsOther);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getGroups(getGroupsOther);
     })
     .add('mops.Checked#getGroups с одной общей группой', function() {
-        this.checked.getGroups(getGroupsOne);
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.getGroups(getGroupsOne);
     })
 
     .add('mops.Checked#toArray', function() {
-        this.checked.toArray();
-    }, {
-        onStart: function() {
-            this.checked = new mops.Checked(objects);
-        },
-        onComplete: function() {
-            this.checked.clear();
-            delete this.checked;
-        }
+        checked.toArray();
     })
 
     .add('mops.Checked#check', function() {

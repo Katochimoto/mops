@@ -62,6 +62,33 @@
         }
     })
 
+    .add('mops.Operation#filter', function () {
+        var iterator = this.operation.filter(this.filterBy);
+        var action;
+
+        while ((action = iterator.next().value)) {
+            action();
+        }
+    }, {
+        onStart: function() {
+            this.filterBy = null;
+            this.operation = new mops.Operation();
+            for (var i = 0; i < 1000; i++) {
+                var oper = actions[ _.random(0, 49) ];
+                this.operation.add(oper);
+                if (!this.filterBy) {
+                    this.filterBy = oper;
+                }
+            }
+        },
+
+        onComplete: function() {
+            this.operation.clear();
+            delete this.operation;
+            delete this.filterBy;
+        }
+    })
+
     .add('mops.Operation#clear', function () {
         this.operation.clear();
     }, {
@@ -75,7 +102,6 @@
         },
 
         onComplete: function() {
-            this.operation.clear();
             delete this.operation;
         }
     })
